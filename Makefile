@@ -1,0 +1,23 @@
+CC = GCC
+#CFLAGS = -Wall -Wextra -Werror
+SERVER_NAME = server
+SERVER_SRC = server.c
+CLIENT_NAME = client
+CLIENT_SRC = client.c
+
+SERVER_OBJECTS = $(SERVER_SRC:%.c=%.o)
+CLIENT_OBJECTS = $(CLIENT_SRC:%.c=%.o)
+
+all : $(SERVER_NAME) $(CLIENT_NAME)
+
+$(NAME) : $(SERVER_OBJECTS) $(CLIENT_OBJECTS)
+	$(CC) $(CFLAGS) $(SERVER_OBJECTS) -o $(SERVER_NAME)
+	$(CC) $(CFLAGS) $(CLIENT_OBJECTS) -o $(CLIENT_NAME)
+
+clean :
+	rm -rf $(SERVER_OBJECTS) $(CLIENT_OBJECTS)
+
+fclean :
+	rm -rf $(SERVER_OBJECTS) $(CLIENT_OBJECTS) $(CLIENT_NAME) $(SERVER_NAME)
+
+re : fclean all
