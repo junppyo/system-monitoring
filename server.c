@@ -1,5 +1,6 @@
 #include "server.h"
 
+
 void tcp_open()
 {
 	int serv_sock;
@@ -7,7 +8,7 @@ void tcp_open()
 	struct sockaddr_in serv_addr;
 	struct sockaddr_in client_addr;
 
-	serv_sock = socket(PF_INET, SOCK_STREAM,0);
+	serv_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if(serv_sock == -1)
 		printf("socket error\n");
 
@@ -24,16 +25,23 @@ void tcp_open()
 
 	socklen_t clnt_addr_size = sizeof(client_addr);
 	client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
+
+	char *s = NULL;
 	while (1)
 	{
 		char message[20];
 		if (read(client_sock, message, sizeof(message)) <= 0)
 		{
 			client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
-			read(client_sock, message, sizeof(message));
+			read(client_sock, message, sizeof(message));	
 		}
-		
-		printf("%s\n", message);
+		s = ft_strjoin(s, message);
+		if (s[strlen(s) - 1] == '\n')
+		{
+			printf("%s\n", s);
+			free(s);
+			s = NULL;
+		}
 	}
 	close(serv_sock);
 	close(client_sock);

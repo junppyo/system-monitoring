@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <signal.h>
+#include "utils.h"
 
 #define DEFAULT_PORT 4242
 #define DEFAULT_IP "127.0.0.1"
