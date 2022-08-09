@@ -37,7 +37,7 @@ void connect_socket()
 				break;
 		}
 	}
-	
+
 	// while (1)
 	// {
 	// 	write(my_sock, "www", 3);
@@ -120,7 +120,8 @@ void collect()
 	FILE *fp;
 	char *ret = NULL;
 	char *s = malloc(sizeof(char) * 20);
-	fp = popen("top -b -n1", "r");
+	fp = popen("top -n1 -b | awk -F ' ' $'{print $1","$2","$9","$11; system("cat /proc/"$1"/cmdline; cat /proc/"$1"/status | grep PPid | awk -F \' \' \'{print $2}\'; cat /proc/"$1"/status | grep Name | awk -F \' \' \'{print $2}\'")}'op -n1 -b | awk -F ' ' $'{print $1","$2","$9","$11; system("cat /proc/"$1"/cmdline; cat /proc/"$1"/status | grep PPid | awk -F \' \' \'{print $2}\'; cat /proc/"$1"/status | grep Name | awk -F \' \' \'{print $2}\'")}'
+", "r");
 	while (fgets(s, sizeof(s), fp) != NULL)
 	{
 		char *tmp;
