@@ -1,4 +1,4 @@
-CC = GCC
+CC = gcc 
 #CFLAGS = -Wall -Wextra -Werror
 SERVER_NAME = server
 SERVER_SRC = server.c

@@ -120,7 +120,7 @@ void collect()
 	FILE *fp;
 	char *ret = NULL;
 	char *s = malloc(sizeof(char) * 20);
-	fp = popen("top -l 1", "r");
+	fp = popen("top -b -n1", "r");
 	while (fgets(s, sizeof(s), fp) != NULL)
 	{
 		char *tmp;
@@ -129,6 +129,7 @@ void collect()
 			free(ret);
 		ret = tmp;
 	}
+	printf("%s\n", ret);
 	char **row = ft_split(ret, '\n');
 	int row_n = rowcnt(row);
 	column = malloc(sizeof(char **) * (row_n + 1));
@@ -140,17 +141,17 @@ void collect()
 		i++;
 	}
 	i = 10;
-	// while (column[i])
-	// {
-	// 	int j = 0;
-	// 	while (column[i][j])
-	// 	{
-	// 		printf("%s ", column[i][j]);
-	// 		j++;
-	// 	}
-	// 	printf("\n");
-	// 	i++;
-	// }
+	while (column[i])
+	{
+		int j = 0;
+		while (column[i][j])
+	 	{
+	 		printf("%s ", column[i][j]);
+	 		j++;
+	 	}
+	 	printf("\n");
+	 	i++;
+	 }
 //	free_collect(ret, row, column);
 }
 
