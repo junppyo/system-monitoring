@@ -4,7 +4,7 @@ SERVER_NAME = server
 SERVER_SRC = server.c
 CLIENT_NAME = client
 CLIENT_SRC = client.c
-UTILS_SRC = utils.c
+UTILS_SRC = utils.c struct.c
 
 SERVER_OBJECTS = $(SERVER_SRC:%.c=%.o)
 CLIENT_OBJECTS = $(CLIENT_SRC:%.c=%.o)

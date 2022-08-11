@@ -71,8 +71,8 @@ void connect_socket()
 	// 	char message[15] = "hello2\n";
 	// 	printf("%d\n", write(my_sock,message,7));
 	// pid[1] = fork();
-	// if (pid[1] == 0)
-	// {
+	// if (pid[1] == 0)ffffff
+	// {nnnnknnnnnnnnvkvkvkvvvvv
 	// 	my_sock = socket(PF_INET,SOCK_STREAM,0);
 	// 	connect(my_sock,(struct sockaddr*)&serv_addr,sizeof(serv_addr));
 	// 	char message[15] = "hello2";
@@ -117,10 +117,42 @@ void free_collect(char* ret, char **row, char ***column)
 
 void collect()
 {
-	FILE *fp;
-	char *ret = NULL;
+	FILE *fd;
+	DIR *dp;
+	struct dirent *dirp;
+	char *file_name;
+	char buf[128];
+	dp = opendir("/proc");
+	if (!dp)
+		printf("open /proc error\n");
+	while ((dirp = readdir(dp)) != NULL)
+	{
+		char *ret = NULL;
+		if (dirp->d_type != DT_DIR)
+			continue ;
+		if (dirp->d_name[0] < '0' || dirp->d_name[0] > '9')
+			continue ;
+		file_name = ft_strjoin("/proc/", dirp->d_name);
+		ret = ft_strjoin(file_name, "/stat");
+		fd = fopen(ret, "r");
+		if (!fd)
+			continue ;
+		procinfo *proc = malloc(sizeof(procinfo));
+		fscanf(fd, "%d %*c%[^)]s", &proc->pid, proc->name);
+		fscanf(fd, ") %*c %d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %lu %lu %ld %ld %*ld %*ld %*ld %*ld %*llu %*lu %*ld %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*d %*d %*u %*u %*llu %*llu %*ld", &proc->ppid, &proc->utime, &proc->stime, &proc->cutime, &proc->cstime);
+		fclose(fd);
+		append(proc);
+	}
+	procinfo *proc_tmp;
+	while ((proc_tmp = pop()) != 0)
+	{
+	printf("%d %s %d %lu %lu %ld %ld\n", proc_tmp->pid, proc_tmp->name, proc_tmp->ppid, proc_tmp->utime, proc_tmp->stime, proc_tmp->cutime, proc_tmp->cstime);
+	}
+		
+	/*	
+		
 	char *s = malloc(sizeof(char) * 20);
-	fp = popen("top -b -n1", "r");
+	fp = popen("ls /proc -l | grep ^d | awk '{print $9}'", "r");
 	while (fgets(s, sizeof(s), fp) != NULL)
 	{
 		char *tmp;
@@ -152,6 +184,7 @@ void collect()
 	 	printf("\n");
 	 	i++;
 	 }
+*/
 //	free_collect(ret, row, column);
 }
 
