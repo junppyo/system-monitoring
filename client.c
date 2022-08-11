@@ -37,7 +37,7 @@ void connect_socket()
 				break;
 		}
 	}
-	
+
 	// while (1)
 	// {
 	// 	write(my_sock, "www", 3);
@@ -152,7 +152,6 @@ void collect()
 	/*	
 		
 	char *s = malloc(sizeof(char) * 20);
-	fp = popen("ls /proc -l | grep ^d | awk '{print $9}'", "r");
 	while (fgets(s, sizeof(s), fp) != NULL)
 	{
 		char *tmp;
