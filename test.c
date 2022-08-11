@@ -1,20 +1,16 @@
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <pwd.h>
 
 int main()
 {
-	char *s;
-	int a, b, c;
-	FILE *fd;
-	fd = fopen("./a.txt", "r");
-	fscanf(fd, "%d %*[^\n]d", &a);
-	printf("%d\n", a);
-	fscanf(fd, "%d", &b);
-	printf("%d\n", b);
-/*	
-fscanf(fd, "%[^ ] %[^ ] %[^ ]", &a, &b, &c);
-	printf("%d %d %d\n", a, b, c);
-	fscanf(fd, "%d %d %d", &a, &b, &c);
-	printf("%d %d %d\n", a, b, c);
-*/
+	register struct passwd *pw;
+	register uid_t uid;
+
+	printf("%d\n", geteuid());
+	pw = getpwuid(32);
+	printf("%s\n", pw->pw_name);
+
 }

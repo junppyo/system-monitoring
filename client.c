@@ -122,6 +122,8 @@ void collect()
 	struct dirent *dirp;
 	char *file_name;
 	char buf[128];
+	char name[256];
+	char uname[32];
 	dp = opendir("/proc");
 	if (!dp)
 		printf("open /proc error\n");
@@ -138,53 +140,37 @@ void collect()
 		if (!fd)
 			continue ;
 		procinfo *proc = malloc(sizeof(procinfo));
-		fscanf(fd, "%d %*c%[^)]s", &proc->pid, proc->name);
-		fscanf(fd, ") %*c %d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %lu %lu %ld %ld %*ld %*ld %*ld %*ld %*llu %*lu %*ld %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*d %*d %*u %*u %*llu %*llu %*ld", &proc->ppid, &proc->utime, &proc->stime, &proc->cutime, &proc->cstime);
+		unsigned long utime;
+		unsigned long stime;
+		long cutime;
+		long cstime;
+		unsigned long long starttime;
+		fscanf(fd, "%d %*c%[^)]s", &proc->pid, name);
+		fscanf(fd, ") %*c %d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %lu %lu %ld %ld %*ld %*ld %*ld %*ld %llu %*lu %*ld %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*d %*d %*u %*u %*llu %*llu %*ld", &proc->ppid, &utime, &stime, &cutime, &cstime, &starttime);
+		proc->name = ft_strdup(name);
+		register struct passwd *pw;
+		struct stat st;
+		char *attr = ft_strjoin(file_name, "/attr");
+		if (stat(attr, &st) == -1)
+			printf("asfdsf\n");
+		proc->uname = ft_strdup(getpwuid(st.st_uid)->pw_name);
+		int hertz = sysconf(_SC_CLK_TCK);
 		fclose(fd);
+		fd = fopen("/proc/uptime", "r");
+		float uptime;
+		fscanf(fd, "%f %*f", &uptime);
+		fclose(fd);
+		proc->cpuusage = (((utime + stime + cutime + cstime) / hertz) / (uptime - (starttime / hertz))) * 100;
 		append(proc);
 	}
 	procinfo *proc_tmp;
+	float c = 0;
 	while ((proc_tmp = pop()) != 0)
 	{
-	printf("%d %s %d %lu %lu %ld %ld\n", proc_tmp->pid, proc_tmp->name, proc_tmp->ppid, proc_tmp->utime, proc_tmp->stime, proc_tmp->cutime, proc_tmp->cstime);
+	printf("%d %s %d %f %s\n", proc_tmp->pid, proc_tmp->name, proc_tmp->ppid, proc_tmp->cpuusage, proc_tmp->uname);
+	c+= proc_tmp->cpuusage;
 	}
-		
-	/*	
-		
-	char *s = malloc(sizeof(char) * 20);
-	while (fgets(s, sizeof(s), fp) != NULL)
-	{
-		char *tmp;
-		tmp = ft_strjoin(ret, s);
-		if (ret)
-			free(ret);
-		ret = tmp;
-	}
-	printf("%s\n", ret);
-	char **row = ft_split(ret, '\n');
-	int row_n = rowcnt(row);
-	column = malloc(sizeof(char **) * (row_n + 1));
-	column[row_n] = 0;
-	int i = 0;
-	while (row[i])
-	{
-		column[i] = ft_split(row[i], ' ');
-		i++;
-	}
-	i = 10;
-	while (column[i])
-	{
-		int j = 0;
-		while (column[i][j])
-	 	{
-	 		printf("%s ", column[i][j]);
-	 		j++;
-	 	}
-	 	printf("\n");
-	 	i++;
-	 }
-*/
-//	free_collect(ret, row, column);
+	printf("cpu usage : %f", c);
 }
 
 int main()

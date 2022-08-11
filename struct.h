@@ -19,15 +19,12 @@ typedef struct s_osinfo
 
 typedef struct s_procinfo
 {
-	char name[256];
+	char *name;
+	char *uname;
 	int pid;
 	int ppid;
-	unsigned long utime;
-	unsigned long stime;
-	long cutime;
-	long cstime;
-	int cpu;
-	int cputime;
+	float cpuusage;
+	long cputime;
 	char *username;
 	char *cmdline;
 	struct s_procinfo *next;	
