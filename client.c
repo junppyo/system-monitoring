@@ -16,7 +16,7 @@ void reconnect(int sig)
 	printf("연결 성공\n");
 }
 
-void connect_socket()
+void connect_socket(osinfo *os)
 {
 	my_sock = socket(PF_INET,SOCK_STREAM,IPPROTO_TCP);
 	if(my_sock == -1)
@@ -37,13 +37,19 @@ void connect_socket()
 				break;
 		}
 	}
+	procinfo *pinfo;
+	while ((pinfo = pop()) != 0)
+	{
+		write(my_sock, pinfo, sizeof(procinfo));
+		printf("%s %d %f\n", pinfo->name, pinfo->pid, pinfo->cputime);
+	}
 
 	// while (1)
 	// {
 	// 	write(my_sock, "www", 3);
 	// 	sleep(2);
 	// }
-
+/*
 	pid_t pid[2];
 	pid[0] = fork();
 	if (pid[0] == 0)
@@ -66,7 +72,7 @@ void connect_socket()
 		sleep(3);
 		exit(0);
 	}
-	// waitpid(-1, NULL, NULL);
+*/	// waitpid(-1, NULL, NULL);
 	// sleep(1);
 	// 	char message[15] = "hello2\n";
 	// 	printf("%d\n", write(my_sock,message,7));
@@ -130,7 +136,7 @@ osinfo *os_collect()
 	fd = fopen("/proc/meminfo", "r");
 	fscanf(fd, "%*s\t%lu%*s\n%*s\t%lu%*s\n%*s\t%*d%*s\n%*s\t%lu%*s\n%*s\t%lu%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s\t%lu",&ret->mem_total, &ret->mem_free, &buffer, &cache, &ret->mem_swap);
 	ret->mem_used = ret->mem_total - ret->mem_free - buffer - cache;
-	printf("%lu %lu %lu %lu\n", ret->cpu_usr, ret->cpu_sys, ret->cpu_idle, ret->cpu_iowait);
+//	printf("%lu %lu\n", ret->cpu_usr, ret->cpu_sys);
 	fclose(fd);
 
 	ret->packet_in_cnt = 0;
@@ -186,9 +192,9 @@ void proc_collect()
 			continue ;
 		procinfo *proc = malloc(sizeof(procinfo));
 
-		fscanf(fd, "%d %*c%[^)]s", &proc->pid, name);
+		fscanf(fd, "%d %*c%[^)]s", &proc->pid, proc->name);
 		fscanf(fd, ") %*c %d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %lu %lu %ld %ld %*ld %*ld %*ld %*ld %llu %*lu %*ld %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*d %*d %*u %*u %*llu %*llu %*ld", &proc->ppid, &utime, &stime, &cutime, &cstime, &starttime);
-		proc->name = ft_strdup(name);
+//		proc->name = ft_strdup(name);
 		register struct passwd *pw;
 		struct stat st;
 		char *proc_attr = ft_strjoin(file_name, "/attr");
@@ -218,6 +224,7 @@ void proc_collect()
 	}
 	procinfo *proc_tmp;
 	float c = 0;
+/*
 	while ((proc_tmp = pop()) != 0)
 	{
 //	printf("%d %s\n", proc_tmp->pid, proc_tmp->cmdline);
@@ -233,13 +240,15 @@ void proc_collect()
 		free(proc_tmp);
 	}
 	printf("cpu usage : %f", c);
+*/
 	closedir(dp);
 }
 
 int main()
 {
 	signal(SIGPIPE, reconnect);
+	osinfo *s = os_collect();
 	proc_collect();
-//	connect_socket();
+	connect_socket(s);
 	return 0;
 }

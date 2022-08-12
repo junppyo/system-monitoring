@@ -1,6 +1,5 @@
 #include "server.h"
 
-
 void tcp_open()
 {
 	int serv_sock;
@@ -25,11 +24,21 @@ void tcp_open()
 
 	socklen_t clnt_addr_size = sizeof(client_addr);
 	client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
-
+	
+	procinfo *pinfo;
 	char *s = NULL;
 	while (1)
 	{
-		char message[20];
+		pinfo = malloc(sizeof(procinfo));
+		if (read(client_sock, pinfo, sizeof(procinfo)) <= 0)
+		{
+			client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
+			read(client_sock, pinfo, sizeof(procinfo));
+		}
+		printf("%s %d %f\n", pinfo->name, pinfo->pid, pinfo->cputime);
+		free(pinfo);
+		pinfo = NULL;
+/*		char message[20];
 		if (read(client_sock, message, sizeof(message)) <= 0)
 		{
 			client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
@@ -42,7 +51,7 @@ void tcp_open()
 			free(s);
 			s = NULL;
 		}
-	}
+*/	}
 	close(serv_sock);
 	close(client_sock);
 }

@@ -50,7 +50,7 @@ char	*ft_strdup(const char *src)
 	char	*ret;
 	int		len;
 
-	if (!src || ft_strlen(src))
+	if (!src || ft_strlen(src) == 0)
 		return 0;
 	len = 0;
 	while (src[len])

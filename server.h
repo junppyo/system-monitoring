@@ -6,5 +6,6 @@
 #include<arpa/inet.h>
 # include <pthread.h>
 #include "utils.h"
+#include "struct.h"
 
 #define DEFAULT_PORT 4242

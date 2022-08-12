@@ -19,7 +19,7 @@ typedef struct s_osinfo
 
 typedef struct s_procinfo
 {
-	char *name;
+	char name[256];
 	char *uname;
 	int pid;
 	int ppid;
