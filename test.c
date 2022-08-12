@@ -6,11 +6,7 @@
 
 int main()
 {
-	register struct passwd *pw;
-	register uid_t uid;
-
-	printf("%d\n", geteuid());
-	pw = getpwuid(32);
-	printf("%s\n", pw->pw_name);
-
+	char *a = malloc(sizeof(char) * 10);
+	if(!a)
+		printf("a");
 }

@@ -115,68 +115,131 @@ void free_collect(char* ret, char **row, char ***column)
 	}
 }
 
-void collect()
+osinfo *os_collect()
+{
+	osinfo *ret = malloc(sizeof(osinfo));
+	unsigned long buffer, cache;
+	unsigned long rbyte, sbyte, rpacket, spacket;
+	FILE *fd;
+	char tmp[256];
+
+	fd = fopen("/proc/stat", "r");
+	fscanf(fd, "%*s  %lu %*lu %lu %lu %lu", &ret->cpu_usr, &ret->cpu_sys, &ret->cpu_idle, &ret->cpu_iowait);
+	fclose(fd);
+
+	fd = fopen("/proc/meminfo", "r");
+	fscanf(fd, "%*s\t%lu%*s\n%*s\t%lu%*s\n%*s\t%*d%*s\n%*s\t%lu%*s\n%*s\t%lu%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s%*d%*s\n%*s\t%lu",&ret->mem_total, &ret->mem_free, &buffer, &cache, &ret->mem_swap);
+	ret->mem_used = ret->mem_total - ret->mem_free - buffer - cache;
+	printf("%lu %lu %lu %lu\n", ret->cpu_usr, ret->cpu_sys, ret->cpu_idle, ret->cpu_iowait);
+	fclose(fd);
+
+	ret->packet_in_cnt = 0;
+	ret->packet_out_cnt = 0;
+	ret->packet_in_byte = 0;
+	ret->packet_out_byte = 0;
+	fd = fopen("/proc/net/dev", "r");
+	fgets(tmp, sizeof(tmp), fd);
+	fgets(tmp, sizeof(tmp), fd);
+	while (EOF != fscanf(fd, "%*s %lu %lu %*lu %*lu %*lu %*lu %*lu %*lu %lu %lu %*lu %*lu %*lu %*lu %*lu %*lu", &rbyte, &rpacket, &sbyte, &spacket))
+	{
+		ret->packet_in_byte += rbyte;
+		ret->packet_in_cnt += rpacket;
+		ret->packet_out_byte += sbyte;
+		ret->packet_out_cnt += spacket;
+	}
+	fclose(fd);
+	
+	return ret;
+}
+
+void proc_collect()
 {
 	FILE *fd;
 	DIR *dp;
 	struct dirent *dirp;
 	char *file_name;
+	float uptime;
 	char buf[128];
 	char name[256];
 	char uname[32];
+	char cmdline[4096];
+	unsigned long utime;
+	unsigned long stime;
+	long cutime;
+	long cstime;
+	int hertz = sysconf(_SC_CLK_TCK);
+	unsigned long long starttime;
 	dp = opendir("/proc");
 	if (!dp)
 		printf("open /proc error\n");
 	while ((dirp = readdir(dp)) != NULL)
 	{
-		char *ret = NULL;
+		char *proc_stat = NULL;
 		if (dirp->d_type != DT_DIR)
 			continue ;
 		if (dirp->d_name[0] < '0' || dirp->d_name[0] > '9')
 			continue ;
 		file_name = ft_strjoin("/proc/", dirp->d_name);
-		ret = ft_strjoin(file_name, "/stat");
-		fd = fopen(ret, "r");
+		proc_stat = ft_strjoin(file_name, "/stat");
+		fd = fopen(proc_stat, "r");
 		if (!fd)
 			continue ;
 		procinfo *proc = malloc(sizeof(procinfo));
-		unsigned long utime;
-		unsigned long stime;
-		long cutime;
-		long cstime;
-		unsigned long long starttime;
+
 		fscanf(fd, "%d %*c%[^)]s", &proc->pid, name);
 		fscanf(fd, ") %*c %d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %lu %lu %ld %ld %*ld %*ld %*ld %*ld %llu %*lu %*ld %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*d %*d %*u %*u %*llu %*llu %*ld", &proc->ppid, &utime, &stime, &cutime, &cstime, &starttime);
 		proc->name = ft_strdup(name);
 		register struct passwd *pw;
 		struct stat st;
-		char *attr = ft_strjoin(file_name, "/attr");
-		if (stat(attr, &st) == -1)
+		char *proc_attr = ft_strjoin(file_name, "/attr");
+		if (stat(proc_attr, &st) == -1)
 			printf("asfdsf\n");
 		proc->uname = ft_strdup(getpwuid(st.st_uid)->pw_name);
-		int hertz = sysconf(_SC_CLK_TCK);
 		fclose(fd);
+
 		fd = fopen("/proc/uptime", "r");
-		float uptime;
 		fscanf(fd, "%f %*f", &uptime);
 		fclose(fd);
+		proc->cputime = (float)(utime + stime) / hertz;
 		proc->cpuusage = (((utime + stime + cutime + cstime) / hertz) / (uptime - (starttime / hertz))) * 100;
+		char *proc_cmdline = ft_strjoin(file_name, "/cmdline");
+		fd = fopen(proc_cmdline, "r");
+		fscanf(fd, "%s", cmdline);
+		proc->cmdline = ft_strdup(cmdline);
+		if (cmdline)
+			cmdline[0] = '\0';
+		fclose(fd);
 		append(proc);
+		free(file_name);
+		free(proc_stat);
+		free(proc_attr);
+		free(proc_cmdline);
+		free(pw);
 	}
 	procinfo *proc_tmp;
 	float c = 0;
 	while ((proc_tmp = pop()) != 0)
 	{
-	printf("%d %s %d %f %s\n", proc_tmp->pid, proc_tmp->name, proc_tmp->ppid, proc_tmp->cpuusage, proc_tmp->uname);
+//	printf("%d %s\n", proc_tmp->pid, proc_tmp->cmdline);
+//	printf("%d %s %d %f %s %f %f\n", proc_tmp->pid, proc_tmp->name, proc_tmp->ppid, proc_tmp->cpuusage, proc_tmp->uname, proc_tmp->cpuusage, proc_tmp->cputime);
 	c+= proc_tmp->cpuusage;
+
+		if (proc_tmp->name)
+			free(proc_tmp->name);
+		if (proc_tmp->uname)
+			free(proc_tmp->uname);
+		if (proc_tmp->cmdline)
+			free(proc_tmp->cmdline);
+		free(proc_tmp);
 	}
 	printf("cpu usage : %f", c);
+	closedir(dp);
 }
 
 int main()
 {
 	signal(SIGPIPE, reconnect);
-	collect();
-	connect_socket();
+	proc_collect();
+//	connect_socket();
 	return 0;
 }

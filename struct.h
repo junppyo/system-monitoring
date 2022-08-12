@@ -3,18 +3,18 @@
 
 typedef struct s_osinfo
 {
-	float cpu_usr;
-	float cpu_sys;
-	float cpu_iowait;
-	float cpu_idle;
-	int mem_free;
-	int mem_total;
-	int mem_used;
-	int mem_swap;
-	int packet_in_cnt;
-	int pakcet_out_cnt;
-	int packet_in_byte;
-	int pakcet_out_byte;
+	unsigned long cpu_usr;
+	unsigned long cpu_sys;
+	unsigned long cpu_iowait;
+	unsigned long cpu_idle;
+	unsigned long mem_free;
+	unsigned long mem_total;
+	unsigned long mem_used;
+	unsigned long mem_swap;
+	unsigned long packet_in_cnt;
+	unsigned long packet_out_cnt;
+	unsigned long packet_in_byte;
+	unsigned long packet_out_byte;
 } osinfo;
 
 typedef struct s_procinfo
@@ -24,8 +24,7 @@ typedef struct s_procinfo
 	int pid;
 	int ppid;
 	float cpuusage;
-	long cputime;
-	char *username;
+	float cputime;
 	char *cmdline;
 	struct s_procinfo *next;	
 } procinfo;
