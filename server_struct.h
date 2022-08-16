@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <unistd.h>
-#include <stdio.h>
 
 typedef struct s_osinfo
 {
@@ -26,29 +25,11 @@ typedef struct s_procinfo
 	int ppid;
 	float cpuusage;
 	float cputime;
-	int cmdline_len;
+	// char *cmdline;
 	char *cmdline;
-	// char cmdline[4096];
 	struct s_procinfo *next;	
 } procinfo;
 
-typedef struct s_plist
-{
-	procinfo *HEAD;
-	procinfo *TAIL;
-} plist;
+void append(procinfo *node);
+procinfo *pop();
 
-void append(plist *list, procinfo *node);
-procinfo *pop(plist *list);
-int getsize(plist *list);
-
-typedef struct s_packet
-{
-	osinfo *osinfo;
-	int proc_len;
-	plist *proc;
-	struct s_packet *next;
-} packet;
-
-void packet_append(packet *HEAD, packet *node);
-packet *packet_pop(packet *HEAD);

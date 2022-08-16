@@ -1,5 +1,12 @@
 #include "server.h"
 
+packet *queue = NULL;
+
+procinfo *receive_pinfo(int sock)
+{
+
+}
+
 void tcp_open()
 {
 	int serv_sock;
@@ -27,37 +34,38 @@ void tcp_open()
 	
 	procinfo *pinfo;
 	char *s = NULL;
+	int i = 0;
+
+	plist *list = malloc(sizeof(plist));
+	list->HEAD = malloc(sizeof(procinfo));
+	list->HEAD->next = NULL;
+
+
 	while (1)
 	{
+		packet *node = malloc(sizeof(packet));
+
 		pinfo = malloc(sizeof(procinfo));
 		if (read(client_sock, pinfo, sizeof(procinfo)) <= 0)
 		{
 			client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
 			read(client_sock, pinfo, sizeof(procinfo));
 		}
-		printf("%s %d %f\n", pinfo->name, pinfo->pid, pinfo->cputime);
-		free(pinfo);
-		pinfo = NULL;
-/*		char message[20];
-		if (read(client_sock, message, sizeof(message)) <= 0)
-		{
-			client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
-			read(client_sock, message, sizeof(message));	
-		}
-		s = ft_strjoin(s, message);
-		if (s[strlen(s) - 1] == '\n')
-		{
-			printf("%s\n", s);
-			free(s);
-			s = NULL;
-		}
-*/	}
+		pinfo->cmdline = malloc(sizeof(char) * (pinfo->cmdline_len + 1));
+		read(client_sock, pinfo->cmdline, pinfo->cmdline_len);
+		pinfo->cmdline[pinfo->cmdline_len] = '\0';
+		printf("%d %s %s %s\n", pinfo->pid, pinfo->name, pinfo->uname, pinfo->cmdline);
+		append(list, pinfo);
+	}
 	close(serv_sock);
 	close(client_sock);
+	procinfo *proc_tmp;
 }
 
 int main()
 {
+	packet *queue = malloc(sizeof(packet));
+	queue->next = NULL;
 	tcp_open();
 	// pthread_t p_thread;
 	// pthread_create(&p_thread, NULL, tcp_open, NULL);

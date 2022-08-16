@@ -1,36 +1,71 @@
 #include "struct.h"
 
-struct s_procinfo *HEAD = NULL;
-struct s_procinfo *TAIL = NULL;
 
-
-void append(procinfo *node)
+void append(plist *list, procinfo *node)
 {
-	if (!HEAD)
+	if (!list->HEAD->next)
 	{
-		HEAD = node;
-		TAIL = node;
+		node->next = NULL;
+		list->HEAD->next = node;
+		list->TAIL = node;
 	}
 	else
 	{
-		TAIL->next = node;
-		TAIL = node;
+		node->next = NULL;
+		list->TAIL->next = node;
+		list->TAIL = node;
 	}
-	node->next = NULL;
 }
 
-procinfo *pop()
+procinfo *pop(plist *list)
 {
-	if (!TAIL)
+	if (!list->TAIL)
 		return 0;
-	procinfo *tmp = HEAD;
-	if (tmp == TAIL)
+	procinfo *tmp;
+	tmp = list->HEAD->next;
+	if (list->HEAD->next == list->TAIL)
 	{
-		TAIL = NULL;
-		HEAD->next = NULL;
+		list->TAIL = NULL;
+		list->HEAD->next = NULL;
 	}
 	else
-		HEAD = HEAD->next;
+		list->HEAD = list->HEAD->next;
 	return tmp;
 }
+
+int getsize(plist *list)
+{
+	procinfo *tmp = list->HEAD;
+	int i = 0;
+	while (tmp->next != list->TAIL)
+	{
+		tmp = tmp->next;
+//		printf("%d\n", tmp->pid);
+		i++;
+	}
+	return i;
+}
 	
+
+void packet_append(packet *HEAD, packet *node)
+{
+	node->next = NULL;
+	if (!HEAD->next)
+	{
+		HEAD->next = node;
+	}
+	else
+	{
+		packet *tmp = HEAD;
+		while (!tmp->next)
+			tmp = tmp->next;
+		tmp->next = node;
+	}
+}
+
+packet *packet_pop(packet *HEAD)
+{
+	packet *ret = HEAD->next;
+	HEAD->next = HEAD->next->next;
+	return ret;
+}

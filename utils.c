@@ -51,7 +51,10 @@ char	*ft_strdup(const char *src)
 	int		len;
 
 	if (!src || ft_strlen(src) == 0)
-		return 0;
+	{
+		ret = malloc(sizeof(char));
+		ret[0] = '\0';
+	}
 	len = 0;
 	while (src[len])
 		len++;
