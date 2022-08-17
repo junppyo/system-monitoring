@@ -1,6 +1,10 @@
+#ifndef STRUCT_H
+# define STRUCT_H
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+
 
 typedef struct s_osinfo
 {
@@ -52,3 +56,5 @@ typedef struct s_packet
 
 void packet_append(packet *HEAD, packet *node);
 packet *packet_pop(packet *HEAD);
+
+#endif

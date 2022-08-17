@@ -45,15 +45,17 @@ char	*ft_strjoin(char const *s1, char const *s2)
 }
 
 
-char	*ft_strdup(const char *src)
+char	*ft_strdup(char *src)
 {
 	char	*ret;
 	int		len;
 
 	if (!src || ft_strlen(src) == 0)
 	{
-		ret = malloc(sizeof(char));
-		ret[0] = '\0';
+		// ret = malloc(sizeof(char));
+		// ret[0] = '\0';
+		// return (ret);
+		return "";
 	}
 	len = 0;
 	while (src[len])

@@ -29,7 +29,7 @@ procinfo *pop(plist *list)
 		list->HEAD->next = NULL;
 	}
 	else
-		list->HEAD = list->HEAD->next;
+		list->HEAD->next = list->HEAD->next->next;
 	return tmp;
 }
 
@@ -40,7 +40,6 @@ int getsize(plist *list)
 	while (tmp->next != list->TAIL)
 	{
 		tmp = tmp->next;
-//		printf("%d\n", tmp->pid);
 		i++;
 	}
 	return i;

@@ -39,54 +39,17 @@ void connect_socket(packet *queue)
 		}
 	}
 	procinfo *pinfo;
-	while ((pinfo = pop(queue->next->proc)) != 0)
+	packet *packet = packet_pop(queue);
+	write(my_sock, packet, sizeof(struct s_packet));
+	write(my_sock, packet->osinfo, sizeof(osinfo));
+	
+	while ((pinfo = pop(packet->proc)) != 0)
 	{
-		printf("%d %s %s %s\n", pinfo->pid, pinfo->name, pinfo->uname, pinfo->cmdline);
+	//	printf("%d %s %s %s\n", pinfo->pid, pinfo->name, pinfo->uname, pinfo->cmdline);
 		write(my_sock, pinfo, sizeof(procinfo));
 		write(my_sock, pinfo->cmdline, pinfo->cmdline_len);
 	}
 
-	// while (1)
-	// {
-	// 	write(my_sock, "www", 3);
-	// 	sleep(2);
-	// }
-/*
-	pid_t pid[2];
-	pid[0] = fork();
-	if (pid[0] == 0)
-	{
-		int i = 0;
-		while (column[i])
-		{
-			write(my_sock, column[i][0], ft_strlen(column[i][0]));
-			write(my_sock, ",", 1);
-			write(my_sock, column[i][1], ft_strlen(column[i][1]));
-			write(1, column[i][0], ft_strlen(column[i][0]));
-			write(1, ",", 1);
-			write(1, column[i][1], ft_strlen(column[i][1]));
-			if (column[++i])
-			{
-				write(my_sock, "\n", 1);
-				write(1, "\n", 1);
-			}
-		}
-		sleep(3);
-		exit(0);
-	}
-*/	// waitpid(-1, NULL, NULL);
-	// sleep(1);
-	// 	char message[15] = "hello2\n";
-	// 	printf("%d\n", write(my_sock,message,7));
-	// pid[1] = fork();
-	// if (pid[1] == 0)ffffff
-	// {nnnnknnnnnnnnvkvkvkvvvvv
-	// 	my_sock = socket(PF_INET,SOCK_STREAM,0);
-	// 	connect(my_sock,(struct sockaddr*)&serv_addr,sizeof(serv_addr));
-	// 	char message[15] = "hello2";
-	// 	printf("%d\n", write(my_sock,message,6));
-	// 	exit(0);
-	// }
 
 	close(my_sock);
 }
