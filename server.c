@@ -42,22 +42,6 @@ void tcp_open(packet *queue)
 	{
 		packet *node = malloc(sizeof(packet));
 		int i = 0;
-		// pinfo = malloc(sizeof(procinfo));
-
-		// if (read(client_sock, pinfo, sizeof(procinfo)) <= 0)
-		// {
-		// 	client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
-		// 	read(client_sock, pinfo, sizeof(procinfo));
-		// }
-		// pinfo->cmdline = malloc(sizeof(char) * (pinfo->cmdline_len + 1));
-		// read(client_sock, pinfo->cmdline, pinfo->cmdline_len);
-		// pinfo->cmdline[pinfo->cmdline_len] = '\0';
-		// printf("%d %s %s %s\n", pinfo->pid, pinfo->name, pinfo->uname, pinfo->cmdline);
-		// append(list, pinfo);
-
-		// node->osinfo = malloc(sizeof(osinfo));
-		// node->proc = malloc(sizeof(plist));
-		// node->next =malloc(sizeof(packet));
 
 		if (read(client_sock, node, sizeof(struct s_packet)) <= 0)
 		{
@@ -99,6 +83,6 @@ int main()
 	tcp_open(queue);
 	// pthread_t p_thread;
 	// pthread_create(&p_thread, NULL, tcp_open, NULL);
-	// while (1);
+
 	return 0;
 }

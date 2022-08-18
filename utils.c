@@ -205,3 +205,60 @@ int rowcnt(char **matrix)
 	}
 	return (i);
 }
+
+ void reverse(char s[])
+ {
+     int i, j;
+     char c;
+ 
+     for (i = 0, j = strlen(s)-1; i<j; i++, j--) {
+         c = s[i];
+         s[i] = s[j];
+         s[j] = c;
+     }
+ }
+ 
+ void itoa(int n, char *s)
+ {
+     int i, sign;
+ 
+     if ((sign = n) < 0)  /* record sign */
+         n = -n;          /* make n positive */
+     i = 0;
+     do {       /* generate digits in reverse order */
+         s[i++] = n % 10 + '0';   /* get next digit */
+     } while ((n /= 10) > 0);     /* delete it */
+     if (sign < 0)
+         s[i++] = '-';
+     s[i] = '\0';
+     reverse(s);
+ }
+unsigned long getTime()
+{
+	time_t t_now;
+	struct tm *t;
+	unsigned long now;
+
+	time(&t_now);
+	t = (struct tm*) localtime(&t_now);
+	now = ((t->tm_year + 1900) * 10000000000) + ((t->tm_mon + 1) * 100000000) + (t->tm_mday * 1000000) + (t->tm_hour * 10000) + (t->tm_min * 100) + t->tm_sec;
+
+	return now;
+
+}
+
+void writelog(FILE *fd, int type, char *message)
+{
+	char *time;
+	char *s;
+	char *tmp;
+
+	if (type == TRACE)
+		fprintf(fd, "%lu trace: %s\n", getTime(), message);
+	else if (type == DEBUG)
+		fprintf(fd, "%lu debug: %s\n", getTime(), message);
+	else if (type == INFO)
+		fprintf(fd, "%lu info: %s\n", getTime(), message);
+	else if (type == ERROR)
+		fprintf(fd, "%lu error: %s\n", getTime(), message);
+}

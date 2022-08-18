@@ -113,8 +113,6 @@ void read_proc(packet *node)
 	list->HEAD->next = NULL;
 	unsigned long utime;
 	unsigned long stime;
-	long cutime;
-	long cstime;
 	char buf[8192];
 	int hertz = sysconf(_SC_CLK_TCK);
 	unsigned long long starttime;
@@ -150,10 +148,6 @@ void read_proc(packet *node)
 				utime = atol(tmp);
 			else if (i == 15)
 				stime = atol(tmp);
-			else if (i == 16)
-				cutime = atol(tmp);
-			else if (i == 17)
-				cstime = atol(tmp);
 			else if (i == 22)
 				starttime = atol(tmp);
 			tmp = strtok(NULL, " ");
@@ -171,7 +165,7 @@ void read_proc(packet *node)
 		fscanf(fd, "%f %*f", &uptime);
 		fclose(fd);
 		proc->cputime = (float)(utime + stime) / hertz;
-		proc->cpuusage = (((utime + stime + cutime + cstime) / hertz) / (uptime - (starttime / hertz))) * 100;
+		proc->cpuusage = (((utime + stime) / hertz) / (uptime - (starttime / hertz))) * 100;
 		char *proc_cmdline = ft_strjoin(file_name, "/cmdline");
 		fd = fopen(proc_cmdline, "r");
 		fscanf(fd, "%s", cmdline);
