@@ -11,6 +11,13 @@
 #include "utils.h"
 #include "struct.h"
 
+#include <fcntl.h>
+
+int rcv(void *message, int size);
+
+int serv_sock;
+int client_sock;
+FILE *logfd;
 #define DEFAULT_PORT 4242
 
 #endif

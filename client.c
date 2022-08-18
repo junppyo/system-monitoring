@@ -2,12 +2,15 @@
 
 void snd(void *message, int size)
 {
+	int ret;
 	char *s;
 
 	if (size <= 0)
 		return ;
-	write(my_sock, message, size);
-	itoa(size, s);
+	ret = write(my_sock, message, size);
+	if (ret <= 0)
+		return ;
+	itoa(ret, s);
 	writelog(logfd, TRACE, ft_strjoin(s, "byte 전송"));
 }
 
@@ -53,12 +56,15 @@ void connect_socket(packet *queue)
 	packet *packet = packet_pop(queue);
 
 	snd(packet, sizeof(struct s_packet));
+	// printf("%d\n", packet->proc_len);
 	snd(packet->osinfo, sizeof(osinfo));
+	// printf("%ld %ld\n", packet->osinfo->cpu_usr, packet->osinfo->mem_total);
 	while ((pinfo = pop(packet->proc)) != 0)
 	{
-	//	printf("%d %s %s %s\n", pinfo->pid, pinfo->name, pinfo->uname, pinfo->cmdline);
+		// printf("%d %s %s %s\n", pinfo->pid, pinfo->name, pinfo->uname, pinfo->cmdline);
 		snd(pinfo, sizeof(procinfo));
 		snd(pinfo->cmdline, pinfo->cmdline_len);
+		// printf("%d\n", pinfo->pid);
 	}
 
 	writelog(logfd, TRACE, "전송 완료");
