@@ -56,28 +56,24 @@ void connect_socket(packet *queue)
 	packet *packet = packet_pop(queue);
 
 	snd(packet, sizeof(struct s_packet));
-	// printf("%d\n", packet->proc_len);
 	snd(packet->osinfo, sizeof(osinfo));
-	// printf("%ld %ld\n", packet->osinfo->cpu_usr, packet->osinfo->mem_total);
 	while ((pinfo = pop(packet->proc)) != 0)
 	{
-		// printf("%d %s %s %s\n", pinfo->pid, pinfo->name, pinfo->uname, pinfo->cmdline);
 		snd(pinfo, sizeof(procinfo));
 		snd(pinfo->cmdline, pinfo->cmdline_len);
-		// printf("%d\n", pinfo->pid);
 	}
 
-	writelog(logfd, TRACE, "전송 완료");
+	writelog(logfd, DEBUG, "전송 완료");
 
 	close(my_sock);
 }
 
 int main()
 {
-	logfd = fopen("client_log", "a");
-
 	packet *queue = malloc(sizeof(packet));
 	queue->next = NULL;
+
+	logfd = fopen("client_log", "a");
 	collect(queue);
 	while (1)
 	{

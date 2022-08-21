@@ -58,8 +58,6 @@ void tcp_open(packet *queue)
 		list->HEAD->next = NULL;
 		node->osinfo = malloc(sizeof(struct s_osinfo));
 		rcv(node->osinfo, sizeof(struct s_osinfo));
-		// printf("%ld %ld %ld\n", node->osinfo->cpu_usr, node->osinfo->mem_total, node->osinfo->packet_in_cnt);
-		// printf("%d\n", node->proc_len);
 		while (i <= node->proc_len)
 		{
 			pinfo = malloc(sizeof(struct s_procinfo));
@@ -67,13 +65,11 @@ void tcp_open(packet *queue)
 			pinfo->cmdline = malloc(sizeof(char) * (pinfo->cmdline_len + 1));
 			rcv(pinfo->cmdline, pinfo->cmdline_len);
 			pinfo->cmdline[pinfo->cmdline_len] = '\0';
-		//	printf("%d %s %s %s\n", pinfo->pid, pinfo->name, pinfo->uname, pinfo->cmdline);
-
 			append(list, pinfo);
 			i++;
 		}
-		// node->proc = list;
-		// packet_append(queue, node);
+		node->proc = list;
+		packet_append(queue, node);
 		break;
 	}
 	close(serv_sock);
@@ -84,12 +80,14 @@ void tcp_open(packet *queue)
 
 int main()
 {
-	logfd = fopen("server_log", "a");
+	pthread_t p_thread;
 	packet *queue = malloc(sizeof(packet));
+
+
+	logfd = fopen("server_log", "a");
 	queue->next = NULL;
-	tcp_open(queue);
-	// pthread_t p_thread;
-	// pthread_create(&p_thread, NULL, tcp_open, NULL);
+//	tcp_open(queue);
+	pthread_create(&p_thread, NULL, tcp_open, NULL);
 	fclose(logfd);
 	return 0;
 }

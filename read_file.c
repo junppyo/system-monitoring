@@ -48,7 +48,7 @@ void read_os(packet *node)
 			free(s);
 		s = s2;
 	}
-	tmp = strtok(s, "\n "); 
+	tmp = strtok(s, "\n ");
 	while (tmp != NULL)
 	{
 		i++;
