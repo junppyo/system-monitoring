@@ -46,36 +46,57 @@ void *tcp_open(void *queu)
 
 	procinfo *pinfo;
 	char *s = NULL;
-
+	p_head header;
 
 	while (1)
 	{
-		packet *node = malloc(sizeof(struct s_packet));
 		int i = 0;
 
-		if (rcv(node, sizeof(struct s_packet)) <= 0)
+		if (rcv(&header, sizeof(p_head)) <= 0)
 		{
 			client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
-			rcv(node, sizeof(struct s_packet));
+			rcv(&header, sizeof(p_head));
 		}
-		// printf("%d\n", node->proc_len);
-		plist *list = malloc(sizeof(struct s_plist));
-		list->HEAD = malloc(sizeof(struct s_procinfo));
-		list->HEAD->next = NULL;
-		node->osinfo = malloc(sizeof(struct s_osinfo));
-		rcv(node->osinfo, sizeof(struct s_osinfo));
-		while (i <= node->proc_len)
+		if (header.type = 'c')
 		{
-			pinfo = malloc(sizeof(struct s_procinfo));
-			rcv(pinfo, sizeof(struct s_procinfo));
-			pinfo->cmdline = malloc(sizeof(char) * (pinfo->cmdline_len + 1));
-			rcv(pinfo->cmdline, pinfo->cmdline_len);
-			pinfo->cmdline[pinfo->cmdline_len] = '\0';
-			append(list, pinfo);
-			i++;
+			cpuinfo *tmp = malloc(sizeof(struct s_cpuinfo));
+			rcv(tmp, sizeof(struct s_cpuinfo));
+			cpu_append(queue, tmp);
 		}
-		node->proc = list;
-		packet_append(queue, node);
+		else if (header.type == 'm')
+		{
+			meminfo *tmp = malloc(sizeof(struct s_meminfo));
+			rcv(tmp, sizeof(struct s_meminfo));
+			mem_append(queue, tmp);
+		}
+		else if (header.type == 'n')
+		{
+			netinfo *tmp = malloc(sizeof(struct s_netinfo));
+			rcv(tmp, sizeof(struct s_netinfo));
+			net_append(queue, tmp);
+		}
+		else if (header.type == 'p')
+		{
+			int i = 0;
+			plist *tmp = malloc(sizeof(struct s_plist));
+			tmp->HEAD = malloc(sizeof(struct s_procinfo));
+			rcv(tmp, sizeof(struct s_plist));
+			tmp->HEAD->next = NULL;
+			tmp->TAIL = NULL;
+			while (i <= tmp->len)
+			{
+				pinfo = malloc(sizeof(struct s_procinfo));
+				rcv(pinfo, sizeof(struct s_procinfo));
+				pinfo->cmdline = malloc(sizeof(char) * (pinfo->cmdline_len + 1));
+				rcv(pinfo->cmdline, pinfo->cmdline_len);
+				pinfo->cmdline[pinfo->cmdline_len] = '\0';
+			//	printf("%d\n", pinfo->pid);
+				append(tmp, pinfo);
+				i++;
+			}
+			plist_append(queue, tmp);
+
+		}
 	}
 	close(serv_sock);
 	close(client_sock);
@@ -88,13 +109,18 @@ int main()
 {
 	pthread_t p_thread;
 	packet *queue = malloc(sizeof(packet));
-
+	queue->cpuqueue = malloc(sizeof(cpuinfo));
+	queue->cpuqueue->next = NULL;
+	queue->memqueue = malloc(sizeof(meminfo));
+	queue->memqueue->next = NULL;
+	queue->netqueue = malloc(sizeof(netinfo));
+	queue->netqueue->next = NULL;
+	queue->plistqueue = malloc(sizeof(plist));
+	queue->plistqueue->next = NULL;
 
 	logfd = fopen("server_log", "a");
-	queue->next = NULL;
 	pthread_create(&p_thread, NULL, tcp_open, queue);
 	while (a == 0);
-	packet *packet = packet_pop(queue);
 	procinfo *tmp;
 
 	fclose(logfd);

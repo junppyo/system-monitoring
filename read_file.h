@@ -12,7 +12,9 @@
 #include <pwd.h>
 
 
-void read_os(packet *node);
+void read_cpu(packet *node);
+void read_mem(packet *node);
+void read_net(packet *node);
 void read_proc(packet *node);
 
 #endif

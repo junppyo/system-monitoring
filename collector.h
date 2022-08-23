@@ -13,7 +13,9 @@
 #include <pthread.h>
 #include "read_file.h"
 
-void *os_collect(void *packe);
+void *cpu_collect(void *packe);
+void *mem_collect(void *packe);
+void *net_collect(void *packe);
 void *proc_collect(void *packe);
 void collect(packet *queue);
 

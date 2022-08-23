@@ -44,27 +44,113 @@ int getsize(plist *list)
 	}
 	return i;
 }
-	
 
-void packet_append(packet *HEAD, packet *node)
+
+void cpu_append(packet *packet, cpuinfo *node)
 {
+	pthread_mutex_lock(&packet->cpu_mutex);
 	node->next = NULL;
-	if (!HEAD->next)
+	if (!packet->cpuqueue->next)
 	{
-		HEAD->next = node;
+		packet->cpuqueue->next = node;
 	}
 	else
 	{
-		packet *tmp = HEAD;
+		cpuinfo *tmp = packet->cpuqueue;
 		while (!tmp->next)
 			tmp = tmp->next;
 		tmp->next = node;
 	}
+	pthread_mutex_unlock(&packet->cpu_mutex);
 }
 
-packet *packet_pop(packet *HEAD)
+cpuinfo *cpu_pop(packet *packet)
 {
-	packet *ret = HEAD->next;
-	HEAD->next = HEAD->next->next;
+	pthread_mutex_lock(&packet->cpu_mutex);
+	cpuinfo *ret = packet->cpuqueue->next;
+	packet->cpuqueue->next = packet->cpuqueue->next->next;
+	pthread_mutex_unlock(&packet->cpu_mutex);
+	return ret;
+}
+
+void mem_append(packet *packet, meminfo *node)
+{
+	pthread_mutex_lock(&packet->mem_mutex);
+	node->next = NULL;
+	if (!packet->memqueue->next)
+	{
+		packet->memqueue->next = node;
+	}
+	else
+	{
+		meminfo *tmp = packet->memqueue;
+		while (!tmp->next)
+			tmp = tmp->next;
+		tmp->next = node;
+	}
+	pthread_mutex_unlock(&packet->mem_mutex);
+
+}
+
+meminfo *mem_pop(packet *packet)
+{
+	pthread_mutex_lock(&packet->mem_mutex);
+	meminfo *ret = packet->memqueue->next;
+	packet->memqueue->next = packet->memqueue->next->next;
+	pthread_mutex_unlock(&packet->mem_mutex);
+	return ret;
+}
+
+void net_append(packet *packet, netinfo *node)
+{
+	pthread_mutex_lock(&packet->net_mutex);
+	node->next = NULL;
+	if (!packet->netqueue->next)
+	{
+		packet->netqueue->next = node;
+	}
+	else
+	{
+		netinfo *tmp = packet->netqueue;
+		while (!tmp->next)
+			tmp = tmp->next;
+		tmp->next = node;
+	}
+	pthread_mutex_unlock(&packet->net_mutex);
+}
+
+netinfo *net_pop(packet *packet)
+{
+	pthread_mutex_lock(&packet->net_mutex);
+	netinfo *ret = packet->netqueue->next;
+	packet->netqueue->next = packet->netqueue->next->next;
+	pthread_mutex_unlock(&packet->net_mutex);
+	return ret;
+}
+
+void plist_append(packet *packet, plist *node)
+{
+	pthread_mutex_lock(&packet->plist_mutex);
+	node->next = NULL;
+	if (!packet->plistqueue->next)
+	{
+		packet->plistqueue->next = node;
+	}
+	else
+	{
+		plist *tmp = packet->plistqueue;
+		while (!tmp->next)
+			tmp = tmp->next;
+		tmp->next = node;
+	}
+	pthread_mutex_unlock(&packet->plist_mutex);
+}
+
+plist *plist_pop(packet *packet)
+{
+	pthread_mutex_lock(&packet->plist_mutex);
+	plist *ret = packet->plistqueue->next;
+	packet->plistqueue->next = packet->plistqueue->next->next;
+	pthread_mutex_unlock(&packet->plist_mutex);
 	return ret;
 }

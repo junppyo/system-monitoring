@@ -8,16 +8,14 @@ static void copy(char *s1, char *s2)
 	s1[i] = '\0';
 }
 
-void read_os(packet *node)
+void read_cpu(packet *node)
 {
 	FILE *fd;
 	char *tmp;
 	char buf[4096];
 	int i = 0;
 	unsigned long buffer, cache;
-	unsigned long rbyte, sbyte, rpacket, spacket;
-	osinfo *osinfo;
-	osinfo = malloc(sizeof(struct s_osinfo));
+	cpuinfo *cpuinfo = malloc(sizeof(struct s_cpuinfo));
 
 	fd = fopen("/proc/stat", "r");
 	fgets(buf, sizeof(buf), fd);
@@ -26,19 +24,29 @@ void read_os(packet *node)
 	{
 		i++;
 		if (i == 2)
-			osinfo->cpu_usr = atoi(tmp);
+			cpuinfo->cpu_usr = atoi(tmp);
 		else if (i == 4)
-			osinfo->cpu_sys = atoi(tmp);
+			cpuinfo->cpu_sys = atoi(tmp);
 		else if (i == 5)
-			osinfo->cpu_idle = atoi(tmp);
+			cpuinfo->cpu_idle = atoi(tmp);
 		else if (i == 6)
-			osinfo->cpu_iowait = atoi(tmp);
+			cpuinfo->cpu_iowait = atoi(tmp);
 		tmp = strtok(NULL, " ");
 	}
 	fclose(fd);
+	cpu_append(node, cpuinfo);
+}
 
+void read_mem(packet *node)
+{
+	FILE *fd;
+	char *tmp;
+	char buf[4096];
+	int i = 0;
+	unsigned long buffer, cache;
 
-	i = 0;
+	meminfo *meminfo = malloc(sizeof(struct s_meminfo));
+
 	fd = fopen("/proc/meminfo", "r");
 	char *s = NULL;
 	while (fgets(buf, sizeof(buf), fd))
@@ -53,27 +61,36 @@ void read_os(packet *node)
 	{
 		i++;
 		if (i == 0 * 3 + 2)
-			osinfo->mem_total = atol(tmp);
+			meminfo->mem_total = atol(tmp);
 		else if (i == 1 * 3 + 2)
-			osinfo->mem_free = atol(tmp);
+			meminfo->mem_free = atol(tmp);
 		else if (i == 3 * 3 + 2)
 			buffer = atoi(tmp);
 		else if (i == 4 * 3 + 2)
 			cache = atoi(tmp);
 		else if (i == 14 * 3 + 2)
-			osinfo->mem_swap = atol(tmp);
+			meminfo->mem_swap = atol(tmp);
 		tmp = strtok(NULL, "\n ");
 	}
 	free(s);
-	osinfo->mem_used = osinfo->mem_total - osinfo->mem_free - buffer - cache;
+	meminfo->mem_used = meminfo->mem_total - meminfo->mem_free - buffer - cache;
 	fclose(fd);
+	mem_append(node, meminfo);
+}
 
-	osinfo->packet_in_cnt = 0;
-	osinfo->packet_in_byte = 0;
-	osinfo->packet_out_cnt = 0;
-	osinfo->packet_out_byte = 0;
+void read_net(packet *node)
+{
+	FILE *fd;
+	char *tmp;
+	char buf[4096];
+	int i = 0;
+
+	netinfo *netinfo = malloc(sizeof(struct s_netinfo));
+	netinfo->packet_in_cnt = 0;
+	netinfo->packet_in_byte = 0;
+	netinfo->packet_out_cnt = 0;
+	netinfo->packet_out_byte = 0;
 	fd = fopen("/proc/net/dev", "r");
-	i = 0;
 	fgets(buf, sizeof(buf), fd);
 	fgets(buf, sizeof(buf), fd);
 	while (fgets(buf, sizeof(buf), fd))
@@ -84,18 +101,18 @@ void read_os(packet *node)
 		{
 			i++;
 			if (i == 2)
-				osinfo->packet_in_byte += atoi(tmp);
+				netinfo->packet_in_byte += atoi(tmp);
 			else if (i == 3)
-				osinfo->packet_in_cnt += atoi(tmp);
+				netinfo->packet_in_cnt += atoi(tmp);
 			else if (i == 10)
-				osinfo->packet_out_byte += atoi(tmp);
+				netinfo->packet_out_byte += atoi(tmp);
 			else if (i == 11)
-				osinfo->packet_out_cnt += atoi(tmp);
+				netinfo->packet_out_cnt += atoi(tmp);
 			tmp = strtok(NULL, " ");
 		}
 	}
+	net_append(node, netinfo);
 	fclose(fd);
-	node->osinfo = osinfo;
 }
 
 void read_proc(packet *node)
@@ -179,6 +196,6 @@ void read_proc(packet *node)
 		free(proc_cmdline);
 	}
 	closedir(dp);
-	node->proc = list;
-	node->proc_len = getsize(list);
+	plist_append(node, list);
+	list->len = getsize(list);
 }
