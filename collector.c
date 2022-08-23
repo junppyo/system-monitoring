@@ -30,10 +30,6 @@ void collect(packet *queue)
 	pthread_create(&thread[0], NULL, os_collect, (void *)packet);
 	pthread_create(&thread[1], NULL, proc_collect, (void *)packet);
 	sleep(0.01);
-	// printf("%d\n", packet->proc->HEAD->next->pid);
-	// while (packet->osinfo == NULL && packet->proc == NULL)
-	// {printf("b");
-	// }printf("a");
 	pthread_mutex_lock(&os_mutex);
 	pthread_mutex_lock(&proc_mutex);
 	packet_append(queue, packet);

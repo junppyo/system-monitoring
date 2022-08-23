@@ -8,8 +8,11 @@ void snd(void *message, int size)
 	if (size <= 0)
 		return ;
 	ret = write(my_sock, message, size);
-	if (ret <= 0)
+	if (ret < 0)
+	{
+		writelog(logfd, TRACE, "전송 실패");
 		return ;
+	}
 	itoa(ret, s);
 	writelog(logfd, TRACE, ft_strjoin(s, "byte 전송"));
 }
@@ -18,7 +21,6 @@ void snd(void *message, int size)
 void reconnect(int sig)
 {
 	writelog(logfd, ERROR, "서버와의 연결이 끊어졌습니다.");
-
 	writelog(logfd, DEBUG, "재접속 시도 중...");
 	my_sock = socket(PF_INET,SOCK_STREAM,IPPROTO_TCP);
 	while (connect(my_sock,(struct sockaddr*)&serv_addr,sizeof(serv_addr)) == -1)
@@ -50,8 +52,8 @@ void connect_socket(packet *queue)
 			if (connect(my_sock,(struct sockaddr*)&serv_addr,sizeof(serv_addr)) != -1)
 				break;
 		}	
-		writelog(logfd, DEBUG, "연결 성공");
 	}
+		writelog(logfd, DEBUG, "연결 성공");
 	procinfo *pinfo;
 	packet *packet = packet_pop(queue);
 
@@ -74,13 +76,13 @@ int main()
 	queue->next = NULL;
 
 	logfd = fopen("client_log", "a");
-	collect(queue);
 	while (1)
 	{
+		collect(queue);
 		if (queue->next == NULL)
 			continue;
 		connect_socket(queue);
-		break;
+		sleep(1);
 	}
 	return 0;
 }

@@ -1,5 +1,6 @@
 #include "server.h"
 
+int a = 0;
 int rcv(void *message, int size)
 {
 	char s[10];
@@ -8,17 +9,21 @@ int rcv(void *message, int size)
 	if (size <= 0)
 		return 0;
 	ret = read(client_sock, message, size);
-	if (ret <= 0)
+	if (ret < 0)
+	{
+		writelog(logfd, TRACE, "수신 실패");
 		return 0;
+	}
 	itoa(size, s);
 	writelog(logfd, TRACE, ft_strjoin(s, "byte 받음"));
 	return ret;
 }
 
-void tcp_open(packet *queue)
+void *tcp_open(void *queu)
 {
 	struct sockaddr_in serv_addr;
 	struct sockaddr_in client_addr;
+	packet *queue = (struct s_packet*) queu;
 
 	serv_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if(serv_sock == -1)
@@ -30,10 +35,11 @@ void tcp_open(packet *queue)
 	serv_addr.sin_port = htons(DEFAULT_PORT);
 
 	if(bind(serv_sock,(struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
-		printf("bind error\n");
+		writelog(logfd, ERROR, "bind error");
 
 	if(listen(serv_sock,5) == -1)
-		printf("listen error\n");
+		writelog(logfd, ERROR, "listen error");
+
 
 	socklen_t clnt_addr_size = sizeof(client_addr);
 	client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
@@ -70,11 +76,11 @@ void tcp_open(packet *queue)
 		}
 		node->proc = list;
 		packet_append(queue, node);
-		break;
 	}
 	close(serv_sock);
 	close(client_sock);
-
+	a = 1;
+	return 0;
 //	procinfo *proc_tmp;
 }
 
@@ -86,8 +92,11 @@ int main()
 
 	logfd = fopen("server_log", "a");
 	queue->next = NULL;
-//	tcp_open(queue);
-	pthread_create(&p_thread, NULL, tcp_open, NULL);
+	pthread_create(&p_thread, NULL, tcp_open, queue);
+	while (a == 0);
+	packet *packet = packet_pop(queue);
+	procinfo *tmp;
+
 	fclose(logfd);
 	return 0;
 }
