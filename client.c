@@ -3,8 +3,8 @@
 void snd(void *message, int size)
 {
 	int ret;
-	char *s;
-
+	char s[4];
+	ret = 1;
 	if (size <= 0)
 		return ;
 	ret = write(my_sock, message, size);
@@ -14,7 +14,7 @@ void snd(void *message, int size)
 		return ;
 	}
 	itoa(ret, s);
-	writelog(logfd, TRACE, ft_strjoin(s, "byte 전송"));
+	writelog(logfd, TRACE, ft_strjoin(s, "byte send"));
 }
 
 
@@ -55,35 +55,38 @@ void connect_socket(packet *packet)
 	}
 		writelog(logfd, DEBUG, "연결 성공");
 	procinfo *pinfo;
-	p_head header;
+	p_head *header = malloc(sizeof(struct s_packethead));
 	while(1)
 	{
 		if (packet->cpuqueue->next)
 		{
-			header.type = 'c';
-			snd(&header, sizeof(p_head));
+			header->type = 'c';
+			snd(header, sizeof(struct s_packethead));
 			snd(cpu_pop(packet), sizeof(struct s_cpuinfo));
 		}
 		if (packet->memqueue->next)
 		{
-			header.type = 'm';
-			snd(&header, sizeof(p_head));
+			header->type = 'm';
+			snd(header, sizeof(struct s_packethead));
 			snd(mem_pop(packet), sizeof(struct s_meminfo));
 		}
 		if (packet->netqueue->next)
 		{
-			header.type = 'n';
-			snd(&header, sizeof(p_head));
+			header->type = 'n';
+			snd(header, sizeof(struct s_packethead));
 			snd(net_pop(packet), sizeof(struct s_netinfo));
 		}
 		if (packet->plistqueue->next)
 		{
-			header.type = 'p';
-			snd(&header, sizeof(p_head));
+			header->type = 'p';
+			snd(header, sizeof(struct s_packethead));
 			plist *plist = plist_pop(packet);
-			snd(plist, sizeof(struct s_procinfo));
+			printf("%d\n", plist->len);
+			snd(plist, sizeof(struct s_plist));
+
 			while ((pinfo = pop(plist)) != 0)
 			{
+				printf("%d\n", pinfo->pid);
 				snd(pinfo, sizeof(procinfo));
 				snd(pinfo->cmdline, pinfo->cmdline_len);
 			}
@@ -113,7 +116,6 @@ int main()
 	
 	while (1)
 	{
-		sleep(1);
 	}
 	return 0;
 }

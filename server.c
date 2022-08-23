@@ -1,6 +1,5 @@
 #include "server.h"
 
-int a = 0;
 int rcv(void *message, int size)
 {
 	char s[10];
@@ -35,7 +34,10 @@ void *tcp_open(void *queu)
 	serv_addr.sin_port = htons(DEFAULT_PORT);
 
 	if(bind(serv_sock,(struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
+	{
+		printf("bind error\n");
 		writelog(logfd, ERROR, "bind error");
+	}
 
 	if(listen(serv_sock,5) == -1)
 		writelog(logfd, ERROR, "listen error");
@@ -46,43 +48,41 @@ void *tcp_open(void *queu)
 
 	procinfo *pinfo;
 	char *s = NULL;
-	p_head header;
-
+	
+	p_head *header = malloc(sizeof(struct s_packethead));
 	while (1)
 	{
 		int i = 0;
-
-		if (rcv(&header, sizeof(p_head)) <= 0)
+		if (rcv(header, sizeof(struct s_packethead)) <= 0)
 		{
 			client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
-			rcv(&header, sizeof(p_head));
+			rcv(header, sizeof(struct s_packethead));
 		}
-		if (header.type = 'c')
+		if (header->type == 'c')
 		{
 			cpuinfo *tmp = malloc(sizeof(struct s_cpuinfo));
 			rcv(tmp, sizeof(struct s_cpuinfo));
 			cpu_append(queue, tmp);
 		}
-		else if (header.type == 'm')
+		else if (header->type == 'm')
 		{
 			meminfo *tmp = malloc(sizeof(struct s_meminfo));
 			rcv(tmp, sizeof(struct s_meminfo));
 			mem_append(queue, tmp);
 		}
-		else if (header.type == 'n')
+		else if (header->type == 'n')
 		{
 			netinfo *tmp = malloc(sizeof(struct s_netinfo));
 			rcv(tmp, sizeof(struct s_netinfo));
 			net_append(queue, tmp);
 		}
-		else if (header.type == 'p')
+		else if (header->type == 'p')
 		{
 			int i = 0;
 			plist *tmp = malloc(sizeof(struct s_plist));
-			tmp->HEAD = malloc(sizeof(struct s_procinfo));
 			rcv(tmp, sizeof(struct s_plist));
+			tmp->HEAD = malloc(sizeof(struct s_procinfo));
 			tmp->HEAD->next = NULL;
-			tmp->TAIL = NULL;
 			while (i <= tmp->len)
 			{
 				pinfo = malloc(sizeof(struct s_procinfo));
@@ -92,17 +92,15 @@ void *tcp_open(void *queu)
 				pinfo->cmdline[pinfo->cmdline_len] = '\0';
 			//	printf("%d\n", pinfo->pid);
 				append(tmp, pinfo);
+
 				i++;
 			}
 			plist_append(queue, tmp);
-
 		}
 	}
 	close(serv_sock);
 	close(client_sock);
-	a = 1;
 	return 0;
-//	procinfo *proc_tmp;
 }
 
 int main()
@@ -120,9 +118,19 @@ int main()
 
 	logfd = fopen("server_log", "a");
 	pthread_create(&p_thread, NULL, tcp_open, queue);
-	while (a == 0);
-	procinfo *tmp;
-
+	while (1)
+	{
+		if (queue->cpuqueue->next)
+		{
+			cpuinfo *tmp = cpu_pop(queue);
+			printf("%lu %lu %lu\n", tmp->cpu_usr, tmp->cpu_sys, tmp->cpu_iowait);
+		}
+		if (queue->memqueue->next)
+		{
+			meminfo *tmp = mem_pop(queue);
+			printf("%lu %lu %lu\n", tmp->mem_free, tmp->mem_total, tmp->mem_used);
+		}
+	}
 	fclose(logfd);
 	return 0;
 }
