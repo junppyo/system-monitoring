@@ -23,5 +23,6 @@ int rowcnt(char **matrix);
 void writelog(FILE *fd, int type, char *message);
 
 void itoa(int n, char *s);
+void free_s(void *a);
 
 #endif

@@ -249,9 +249,6 @@ unsigned long getTime()
 
 void writelog(FILE *fd, int type, char *message)
 {
-	char *time;
-	char *s;
-	char *tmp;
 
 	if (type == TRACE)
 		fprintf(fd, "%lu trace: %s\n", getTime(), message);
@@ -261,4 +258,11 @@ void writelog(FILE *fd, int type, char *message)
 		fprintf(fd, "%lu info: %s\n", getTime(), message);
 	else if (type == ERROR)
 		fprintf(fd, "%lu error: %s\n", getTime(), message);
+	free_s(message);
+}
+
+void free_s(void *a)
+{
+	if (a)
+		free(a);
 }

@@ -52,8 +52,7 @@ void read_mem(packet *node)
 	while (fgets(buf, sizeof(buf), fd))
 	{
 		char *s2 = ft_strjoin(s, buf);
-		if (s)
-			free(s);
+		free_s(s);
 		s = s2;
 	}
 	tmp = strtok(s, "\n ");
@@ -72,7 +71,7 @@ void read_mem(packet *node)
 			meminfo->mem_swap = atol(tmp);
 		tmp = strtok(NULL, "\n ");
 	}
-	free(s);
+	free_s(s);
 	meminfo->mem_used = meminfo->mem_total - meminfo->mem_free - buffer - cache;
 	fclose(fd);
 	mem_append(node, meminfo);
@@ -191,9 +190,9 @@ void read_proc(packet *node)
 		fclose(fd);
 		append(list, proc);
 		cmdline[0] = '\0';
-		free(file_name);
-		free(proc_stat);
-		free(proc_cmdline);
+		free_s(file_name);
+		free_s(proc_stat);
+		free_s(proc_cmdline);
 	}
 	closedir(dp);
 	list->len = getsize(list);

@@ -60,21 +60,28 @@ void connect_socket(packet *packet)
 	{
 		if (packet->cpuqueue->next)
 		{
+			//lock
 			header->type = 'c';
+			cpuinfo *tmp = cpu_pop(packet);
 			snd(header, sizeof(struct s_packethead));
-			snd(cpu_pop(packet), sizeof(struct s_cpuinfo));
+			snd(tmp, sizeof(struct s_cpuinfo));
+			free_s(tmp);
 		}
 		if (packet->memqueue->next)
 		{
 			header->type = 'm';
+			meminfo *tmp = mem_pop(packet);
 			snd(header, sizeof(struct s_packethead));
-			snd(mem_pop(packet), sizeof(struct s_meminfo));
+			snd(tmp, sizeof(struct s_meminfo));
+			free_s(tmp);
 		}
 		if (packet->netqueue->next)
 		{
 			header->type = 'n';
+			netinfo *tmp = net_pop(packet);
 			snd(header, sizeof(struct s_packethead));
-			snd(net_pop(packet), sizeof(struct s_netinfo));
+			snd(tmp, sizeof(struct s_netinfo));
+			free_s(tmp);
 		}
 		if (packet->plistqueue->next)
 		{
@@ -89,10 +96,14 @@ void connect_socket(packet *packet)
 				printf("%d\n", pinfo->pid);
 				snd(pinfo, sizeof(procinfo));
 				snd(pinfo->cmdline, pinfo->cmdline_len);
+				free_s(pinfo->cmdline);
+				free_s(pinfo);
 			}
+			free_s(plist->HEAD);
+			free_s(plist);
 		}
 	}
-
+	free_s(header);
 	writelog(logfd, DEBUG, "전송 완료");
 
 	close(my_sock);
@@ -105,17 +116,26 @@ int main()
 	queue->cpuqueue->next = NULL;
 	queue->memqueue = malloc(sizeof(meminfo));
 	queue->memqueue->next = NULL;
-	queue->netqueue = malloc(sizeof(netinfo));
-	queue->netqueue->next = NULL;
 	queue->plistqueue = malloc(sizeof(plist));
 	queue->plistqueue->next = NULL;
 
+	queue->netqueue = malloc(sizeof(netinfo));
+	queue->netqueue->next = NULL;
 	logfd = fopen("client_log", "a");
 	collect(queue);
 	connect_socket(queue);
-	
+	free_s(queue->cpuqueue);
+	free_s(queue->memqueue);
+	free_s(queue->netqueue);
+	free_s(queue->plistqueue);
+	pthread_mutex_destroy(&queue->cpu_mutex);
+	pthread_mutex_destroy(&queue->mem_mutex);
+	pthread_mutex_destroy(&queue->net_mutex);
+	pthread_mutex_destroy(&queue->plist_mutex);
+	free_s(queue);
 	while (1)
 	{
 	}
+	fclose(logfd);
 	return 0;
 }

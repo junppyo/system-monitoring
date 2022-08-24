@@ -70,7 +70,6 @@ typedef struct s_packet
 	struct s_meminfo *memqueue;
 	struct s_netinfo *netqueue;
 	struct s_plist *plistqueue;
-	plist *proc;
 
 	pthread_mutex_t cpu_mutex;
 	pthread_mutex_t mem_mutex;
