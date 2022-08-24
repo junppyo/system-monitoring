@@ -1,5 +1,5 @@
 #include "server.h"
-
+//a
 int rcv(void *message, int size)
 {
 	char s[10];
