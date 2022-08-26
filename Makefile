@@ -3,8 +3,9 @@ CC = gcc
 SERVER_NAME = server
 SERVER_SRC = server.c
 CLIENT_NAME = client
-CLIENT_SRC = client.c collector.c read_file.c
+CLIENT_SRC = sender.c client.c collector.c read_file.c
 UTILS_SRC = utils.c struct.c
+DB_FLAG = -I/usr/include/mysql -L/usr/lib/mysql -lmysqlclient
 
 SERVER_OBJECTS = $(SERVER_SRC:%.c=%.o)
 CLIENT_OBJECTS = $(CLIENT_SRC:%.c=%.o)

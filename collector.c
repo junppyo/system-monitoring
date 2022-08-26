@@ -51,8 +51,4 @@ void collect(packet *queue)
 	pthread_create(&thread[1], NULL, mem_collect, (void *)queue);
 	pthread_create(&thread[2], NULL, net_collect, (void *)queue);
 	pthread_create(&thread[3], NULL, proc_collect, (void *)queue);
-	pthread_join(thread[0], 0);
-	pthread_join(thread[1], 0);
-	pthread_join(thread[2], 0);
-	pthread_join(thread[3], 0);
 }

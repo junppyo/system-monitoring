@@ -1,5 +1,5 @@
 #include "server.h"
-//a
+
 int rcv(void *message, int size)
 {
 	char s[10];
@@ -41,7 +41,6 @@ void *tcp_open(void *queu)
 
 	if(listen(serv_sock,5) == -1)
 		writelog(logfd, ERROR, "listen error");
-
 
 	socklen_t clnt_addr_size = sizeof(client_addr);
 	client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
