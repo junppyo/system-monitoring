@@ -6,5 +6,8 @@
 #include <string.h>
 #include "sender.h"
 
+int my_sock;
+struct sockaddr_in serv_addr;
+FILE *logfd;
 
 #endif

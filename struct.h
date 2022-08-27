@@ -8,6 +8,7 @@
 
 typedef struct s_cpuinfo
 {
+	int id;
 	unsigned long cpu_usr;
 	unsigned long cpu_sys;
 	unsigned long cpu_iowait;
@@ -17,6 +18,7 @@ typedef struct s_cpuinfo
 
 typedef struct s_meminfo
 {
+	int id;
 	unsigned long mem_free;
 	unsigned long mem_total;
 	unsigned long mem_used;
@@ -26,6 +28,7 @@ typedef struct s_meminfo
 
 typedef struct s_netinfo
 {
+	int id;
 	unsigned long packet_in_cnt;
 	unsigned long packet_out_cnt;
 	unsigned long packet_in_byte;
@@ -49,6 +52,7 @@ typedef struct s_procinfo
 
 typedef struct s_plist
 {
+	int id;
 	procinfo *HEAD;
 	procinfo *TAIL;
 	int len;
@@ -90,3 +94,9 @@ netinfo *net_pop(packet *packet);
 void plist_append(packet *packet, plist *node);
 plist *plist_pop(packet *packet);
 #endif
+
+extern unsigned int CPU_CYCLE;
+extern unsigned int MEM_CYCLE;
+extern unsigned int NET_CYCLE;
+extern unsigned int PROC_CYCLE;
+extern int clientid;

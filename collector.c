@@ -6,7 +6,7 @@ void *cpu_collect(void *packe)
 	while (1)
 	{
 		read_cpu(packet);
-		sleep(1);
+		usleep(CPU_CYCLE);
 	}
 	return (0);
 }
@@ -17,7 +17,7 @@ void *mem_collect(void *packe)
 	while (1)
 	{
 		read_mem(packet);
-		sleep(1);
+		usleep(MEM_CYCLE);
 	}
 	return (0);
 }
@@ -28,7 +28,7 @@ void *net_collect(void *packe)
 	while (1)
 	{
 		read_net(packet);
-		sleep(1);
+		usleep(NET_CYCLE);
 	}
 	return (0);
 }
@@ -39,7 +39,7 @@ void *proc_collect(void *packe)
 	while (1)
 	{
 		read_proc(packet);
-		sleep(1);
+		usleep(PROC_CYCLE);
 	}
 	return 0;
 }

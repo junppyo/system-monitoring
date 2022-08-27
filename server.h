@@ -10,14 +10,14 @@
 # include <pthread.h>
 #include "utils.h"
 #include "struct.h"
-
+#include "saver.h"
 #include <fcntl.h>
 
 int rcv(void *message, int size);
 
 int serv_sock;
 int client_sock;
-FILE *logfd;
+extern FILE *logfd;
 #define DEFAULT_PORT 4242
 
 #endif

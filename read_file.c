@@ -34,6 +34,7 @@ void read_cpu(packet *node)
 		tmp = strtok(NULL, " ");
 	}
 	fclose(fd);
+	cpuinfo->id = clientid;
 	cpu_append(node, cpuinfo);
 }
 
@@ -74,6 +75,7 @@ void read_mem(packet *node)
 	free_s(s);
 	meminfo->mem_used = meminfo->mem_total - meminfo->mem_free - buffer - cache;
 	fclose(fd);
+	meminfo->id = clientid;
 	mem_append(node, meminfo);
 }
 
@@ -110,6 +112,7 @@ void read_net(packet *node)
 			tmp = strtok(NULL, " ");
 		}
 	}
+	netinfo->id = clientid;
 	net_append(node, netinfo);
 	fclose(fd);
 }
@@ -195,6 +198,7 @@ void read_proc(packet *node)
 		free_s(proc_cmdline);
 	}
 	closedir(dp);
+	list->id = clientid;
 	list->len = getsize(list);
 	plist_append(node, list);
 }

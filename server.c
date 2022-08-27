@@ -105,6 +105,7 @@ void *tcp_open(void *queu)
 int main()
 {
 	pthread_t p_thread;
+	pthread_t thread;
 	packet *queue = malloc(sizeof(packet));
 	queue->cpuqueue = malloc(sizeof(cpuinfo));
 	queue->cpuqueue->next = NULL;
@@ -117,18 +118,20 @@ int main()
 
 	logfd = fopen("server_log", "a");
 	pthread_create(&p_thread, NULL, tcp_open, queue);
+	pthread_create(&thread, NULL, saver, (void *)queue);
+	
 	while (1)
 	{
-		if (queue->cpuqueue->next)
-		{
-			cpuinfo *tmp = cpu_pop(queue);
-			printf("%lu %lu %lu\n", tmp->cpu_usr, tmp->cpu_sys, tmp->cpu_iowait);
-		}
-		if (queue->memqueue->next)
-		{
-			meminfo *tmp = mem_pop(queue);
-			printf("%lu %lu %lu\n", tmp->mem_free, tmp->mem_total, tmp->mem_used);
-		}
+		// if (queue->cpuqueue->next)
+		// {
+		// 	cpuinfo *tmp = cpu_pop(queue);
+		// 	printf("%lu %lu %lu\n", tmp->cpu_usr, tmp->cpu_sys, tmp->cpu_iowait);
+		// }
+		// if (queue->memqueue->next)
+		// {
+		// 	meminfo *tmp = mem_pop(queue);
+		// 	printf("%lu %lu %lu\n", tmp->mem_free, tmp->mem_total, tmp->mem_used);
+		// }
 	}
 	fclose(logfd);
 	return 0;
