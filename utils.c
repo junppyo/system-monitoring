@@ -80,7 +80,7 @@ char	*ft_substr(char const *s, unsigned int start, size_t len)
 
 	if (s == NULL)
 		return (0);
-	if (start >= ft_strlen(s))
+	if (start >= (unsigned int) ft_strlen(s))
 		return (ft_strdup(""));
 	ret = malloc(sizeof(char) * (len + 1));
 	if (ret == 0)
@@ -267,4 +267,21 @@ void free_s(void *a)
 		free(a);
 		a = NULL;
 	}
+}
+
+int daemon_init(void)
+{
+	pid_t pid;
+
+	if ((pid = fork()) < 0)
+		return (-1);
+	else if (pid != 0)
+		exit(0);
+    signal(SIGHUP, SIG_IGN);
+	setsid();
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+	umask(0);
+	return(0);
 }

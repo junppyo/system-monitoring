@@ -28,40 +28,49 @@ packet *init(void)
 	if (!config)
 	{
 		writelog(logfd, ERROR, "Can't Read Config File");
+		clientid = 1;
+		CPU_CYCLE = 1;
+		MEM_CYCLE = 1;
+		NET_CYCLE = 1;
+		PROC_CYCLE = 1;
 	}
-	char buf[512];
-	char *tmp;
+	else
+	{
+		char buf[512];
+		char *tmp;
 
-	fgets(buf, sizeof(buf), config);
-	tmp = strtok(buf, "=");
-	tmp = strtok(NULL, "=");
-	clientid = atoi(tmp);
+		fgets(buf, sizeof(buf), config);
+		tmp = strtok(buf, "=");
+		tmp = strtok(NULL, "=");
+		clientid = atoi(tmp);
 
-	fgets(buf, sizeof(buf), config);
-	tmp = strtok(buf, "=");
-	tmp = strtok(NULL, "=");
-	CPU_CYCLE = atof(tmp) * 1000000;
+		fgets(buf, sizeof(buf), config);
+		tmp = strtok(buf, "=");
+		tmp = strtok(NULL, "=");
+		CPU_CYCLE = atof(tmp) * 1000000;
 
-	fgets(buf, sizeof(buf), config);
-	tmp = strtok(buf, "=");
-	tmp = strtok(NULL, "=");
-	MEM_CYCLE = atof(tmp) * 1000000;
-	
-	fgets(buf, sizeof(buf), config);
-	tmp = strtok(buf, "=");
-	tmp = strtok(NULL, "=");
-	NET_CYCLE = atof(tmp) * 1000000;
-	
-	fgets(buf, sizeof(buf), config);
-	tmp = strtok(buf, "=");
-	tmp = strtok(NULL, "=");
-	PROC_CYCLE = atof(tmp) * 1000000;
+		fgets(buf, sizeof(buf), config);
+		tmp = strtok(buf, "=");
+		tmp = strtok(NULL, "=");
+		MEM_CYCLE = atof(tmp) * 1000000;
+		
+		fgets(buf, sizeof(buf), config);
+		tmp = strtok(buf, "=");
+		tmp = strtok(NULL, "=");
+		NET_CYCLE = atof(tmp) * 1000000;
+		
+		fgets(buf, sizeof(buf), config);
+		tmp = strtok(buf, "=");
+		tmp = strtok(NULL, "=");
+		PROC_CYCLE = atof(tmp) * 1000000;
+	}
 	
 	return (queue);
 }
 
 int main()
 {
+	daemon_init();
 	packet *queue = init();
 	pthread_t thread;
 

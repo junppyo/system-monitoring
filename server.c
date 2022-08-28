@@ -1,5 +1,6 @@
 #include "server.h"
 
+
 int rcv(void *message, int size)
 {
 	char s[10];
@@ -46,12 +47,10 @@ void *tcp_open(void *queu)
 	client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
 
 	procinfo *pinfo;
-	char *s = NULL;
 	
 	p_head *header = malloc(sizeof(struct s_packethead));
 	while (1)
 	{
-		int i = 0;
 		if (rcv(header, sizeof(struct s_packethead)) <= 0)
 		{
 			client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
@@ -104,6 +103,7 @@ void *tcp_open(void *queu)
 
 int main()
 {
+	daemon_init();
 	pthread_t p_thread;
 	pthread_t thread;
 	packet *queue = malloc(sizeof(packet));

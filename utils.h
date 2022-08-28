@@ -6,7 +6,10 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <time.h>
+#include <signal.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define TRACE 0
 #define DEBUG 1
@@ -24,5 +27,6 @@ void writelog(FILE *fd, int type, char *message);
 
 void itoa(int n, char *s);
 void free_s(void *a);
+int daemon_init(void);
 
 #endif

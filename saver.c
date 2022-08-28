@@ -14,12 +14,12 @@ int connect_db(void)
 
 void send_query(char *s)
 {
-	MYSQL_RES *res;
-	MYSQL_ROW row;
+	// MYSQL_RES *res;
+	// MYSQL_ROW row;
 	write(1, s, ft_strlen(s));
 	write(1, "\n", 1);
 	mysql_query(conn, s);
-	res = mysql_use_result(conn);
+	// res = mysql_use_result(conn);
 }
 
 void *saver(void *queu)
@@ -35,7 +35,6 @@ void *saver(void *queu)
 
 	while (1)
 	{
-		int i = 0;
 		if (queue->cpuqueue->next)
 		{
 			cpuinfo *tmp = cpu_pop(queue);
