@@ -50,6 +50,7 @@ void cpu_append(packet *packet, cpuinfo *node)
 {
 	pthread_mutex_lock(&packet->cpu_mutex);
 	node->next = NULL;
+	int i =0;
 	if (!packet->cpuqueue->next)
 	{
 		packet->cpuqueue->next = node;
@@ -57,8 +58,10 @@ void cpu_append(packet *packet, cpuinfo *node)
 	else
 	{
 		cpuinfo *tmp = packet->cpuqueue;
-		while (!tmp->next)
+		while (tmp->next){
 			tmp = tmp->next;
+			i++;
+		}
 		tmp->next = node;
 	}
 	pthread_mutex_unlock(&packet->cpu_mutex);
@@ -84,7 +87,7 @@ void mem_append(packet *packet, meminfo *node)
 	else
 	{
 		meminfo *tmp = packet->memqueue;
-		while (!tmp->next)
+		while (tmp->next)
 			tmp = tmp->next;
 		tmp->next = node;
 	}
@@ -112,7 +115,7 @@ void net_append(packet *packet, netinfo *node)
 	else
 	{
 		netinfo *tmp = packet->netqueue;
-		while (!tmp->next)
+		while (tmp->next)
 			tmp = tmp->next;
 		tmp->next = node;
 	}
@@ -139,7 +142,7 @@ void plist_append(packet *packet, plist *node)
 	else
 	{
 		plist *tmp = packet->plistqueue;
-		while (!tmp->next)
+		while (tmp->next)
 			tmp = tmp->next;
 		tmp->next = node;
 	}

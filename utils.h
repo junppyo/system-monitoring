@@ -27,6 +27,7 @@ void writelog(FILE *fd, int type, char *message);
 
 void itoa(int n, char *s);
 void free_s(void *a);
+char *make_packet(void *s1, int size1, void *s2, int size2);
 int daemon_init(void);
 
 #endif

@@ -103,7 +103,7 @@ void *tcp_open(void *queu)
 
 int main()
 {
-	daemon_init();
+	// daemon_init();
 	pthread_t p_thread;
 	pthread_t thread;
 	packet *queue = malloc(sizeof(packet));

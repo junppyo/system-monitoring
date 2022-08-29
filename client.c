@@ -70,7 +70,9 @@ packet *init(void)
 
 int main()
 {
-	daemon_init();
+    setbuf(stdout, NULL);
+
+	// daemon_init();
 	packet *queue = init();
 	pthread_t thread;
 
