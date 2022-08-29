@@ -3,7 +3,7 @@
 void snd(void *message, int size)
 {
 	int ret;
-	char s[4];
+	char s[10];
 	ret = 1;
 	if (size <= 0)
 		return ;
@@ -61,17 +61,80 @@ void connect_socket(packet *packet)
 		writelog(logfd, DEBUG, "연결 성공");
 	procinfo *pinfo;
 	p_head *header = malloc(sizeof(struct s_packethead));
+	plist *list;
+	plist *test;
 	while(1)
 	{
 		if (packet->cpuqueue->next)
 		{
-			//lock
 			header->type = 'c';
 			cpuinfo *tmp = cpu_pop(packet);
-			snd(header, sizeof(struct s_packethead));
-			snd(tmp, sizeof(struct s_cpuinfo));
-			free_s(tmp);
+			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(cpuinfo));
+			snd(message, sizeof(p_head) + sizeof(cpuinfo));
+			free_s(message);
 		}
+		if (packet->memqueue->next)
+		{
+			header->type = 'm';
+			meminfo *tmp = mem_pop(packet);
+			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(meminfo));
+			snd(message, sizeof(p_head) + sizeof(meminfo));
+			free_s(message);
+		}
+		if (packet->netqueue->next)
+		{
+			header->type = 'n';
+			netinfo *tmp = net_pop(packet);
+			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(netinfo));
+			snd(message, sizeof(p_head) + sizeof(netinfo));
+			free_s(message);
+		}
+
+		// if (packet->plistqueue->next)
+		// {
+		// 	header->type = 'p';
+		// 	list = plist_pop(packet);
+		// 	int size = 0;
+		// 	char *tmp = NULL;
+		// 	char *message = make_packet(header, sizeof(p_head), list, sizeof(plist));
+		// 	char *message;
+		// 	size += sizeof(p_head);
+		// 	size += sizeof(struct s_plist);
+		// 	int i = 0;
+		// 	while ((pinfo = pop(list)) != 0)
+		// 	{
+		// 		tmp = make_packet(message, size, pinfo, sizeof(procinfo));
+		// 		free_s(message);
+		// 		message = tmp;
+		// 		pinfo = (procinfo *)ft_substr(tmp, size, sizeof(procinfo));
+		// 		size += sizeof(procinfo);
+		// 		if (pinfo->cmdline_len)
+		// 		{
+		// 			tmp = make_packet(message, size, pinfo->cmdline, pinfo->cmdline_len);
+		// 			size += pinfo->cmdline_len;
+		// 			free_s(message);
+		// 			message = tmp;
+		// 		}
+		// 		i ++;
+		// 		if (i == 100)
+		// 			break;
+		// 	}
+		// 	snd(message, size);
+		// 	free_s(message);
+		// 	free_s(list->HEAD);
+		// 	free_s(list);
+		// }
+
+		// if (packet->cpuqueue->next)
+		// {
+		// 	//lock
+		// 	header->type = 'c';
+		// 	cpuinfo *tmp = cpu_pop(packet);
+		// 	printf("%d\n", sizeof(cpuinfo));
+		// 	snd(header, sizeof(struct s_packethead));
+		// 	snd(tmp, sizeof(struct s_cpuinfo));
+		// 	free_s(tmp);
+		// }
 		// if (packet->memqueue->next)
 		// {
 		// 	header->type = 'm';

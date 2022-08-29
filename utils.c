@@ -282,7 +282,6 @@ int daemon_init(void)
 	close(STDIN_FILENO);
 	close(STDOUT_FILENO);
 	close(STDERR_FILENO);
-	umask(0);
 	return(0);
 }
 

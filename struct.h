@@ -65,7 +65,6 @@ int getsize(plist *list);
 
 typedef struct s_packethead
 {
-	int id;
 	char type;
 } p_head;
 

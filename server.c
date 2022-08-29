@@ -47,54 +47,98 @@ void *tcp_open(void *queu)
 	client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
 
 	procinfo *pinfo;
-	
-	p_head *header = malloc(sizeof(struct s_packethead));
+	plist *list;
+	// p_head *header = malloc(sizeof(struct s_packethead));
+	p_head *header;
+	char *buf = malloc(165483);
 	while (1)
 	{
-		if (rcv(header, sizeof(struct s_packethead)) <= 0)
+		int n = 0;
+		if (rcv(buf, 165483) <= 0)
 		{
 			client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
-			rcv(header, sizeof(struct s_packethead));
+			rcv(buf, 165483);
 		}
+		header = (p_head*) ft_substr(buf, 0, sizeof(p_head));
+		// printf("type: %c\n", header->type);
 		if (header->type == 'c')
 		{
-			cpuinfo *tmp = malloc(sizeof(struct s_cpuinfo));
-			rcv(tmp, sizeof(struct s_cpuinfo));
-			cpu_append(queue, tmp);
+			cpu_append(queue, (cpuinfo *)ft_substr(buf, sizeof(p_head), sizeof(cpuinfo)));
 		}
-		else if (header->type == 'm')
+		if (header->type == 'm')
 		{
-			meminfo *tmp = malloc(sizeof(struct s_meminfo));
-			rcv(tmp, sizeof(struct s_meminfo));
-			mem_append(queue, tmp);
+			mem_append(queue, (meminfo *)ft_substr(buf, sizeof(p_head), sizeof(meminfo)));
 		}
-		else if (header->type == 'n')
+		if (header->type == 'n')
 		{
-			netinfo *tmp = malloc(sizeof(struct s_netinfo));
-			rcv(tmp, sizeof(struct s_netinfo));
-			net_append(queue, tmp);
+			net_append(queue, (netinfo *)ft_substr(buf, sizeof(p_head), sizeof(netinfo)));
 		}
-		else if (header->type == 'p')
-		{
-			int i = 0;
-			plist *tmp = malloc(sizeof(struct s_plist));
-			rcv(tmp, sizeof(struct s_plist));
-			tmp->HEAD = malloc(sizeof(struct s_procinfo));
-			tmp->HEAD->next = NULL;
-			while (i <= tmp->len)
-			{
-				pinfo = malloc(sizeof(struct s_procinfo));
-				rcv(pinfo, sizeof(struct s_procinfo));
-				pinfo->cmdline = malloc(sizeof(char) * (pinfo->cmdline_len + 1));
-				rcv(pinfo->cmdline, pinfo->cmdline_len);
-				pinfo->cmdline[pinfo->cmdline_len] = '\0';
-			//	printf("%d\n", pinfo->pid);
-				append(tmp, pinfo);
+		// if (header->type == 'p')
+		// {
+		// 	int i = 0;
+		// 	int start = 0;
+		// 	list = ft_substr(buf, sizeof(p_head), sizeof(plist));
+		// 	list->HEAD = malloc(sizeof(struct s_procinfo));
+		// 	list->HEAD->next = NULL;
+		// 	start += sizeof(p_head) + sizeof(struct s_plist);
+		// 	printf("len %d\n", list->len);
+		// 	while (i <= 100)
+		// 	{
+		// 		pinfo = (procinfo *)ft_substr(buf, start, sizeof(procinfo));
+		// 		printf("%d\n", pinfo->cmdline_len);
+		// 		start += sizeof(procinfo);
+		// 		if (pinfo->cmdline_len){
+		// 			pinfo->cmdline = ft_substr(buf, start, pinfo->cmdline_len);
+		// 			start += pinfo->cmdline_len;
+		// 		}
+		// 		i++;
+		// 		append(list, pinfo);
+		// 	}
+		// 	plist_append(queue, list);
+		// }
+		// if (rcv(header, sizeof(struct s_packethead)) <= 0)
+		// {
+		// 	client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);_
+		// 	rcv(header, sizeof(struct s_packethead));
+		// }
+		// if (header->type == 'c')
+		// {
+		// 	cpuinfo *tmp = malloc(sizeof(struct s_cpuinfo));
+		// 	rcv(tmp, sizeof(struct s_cpuinfo));
+		// 	cpu_append(queue, tmp);
+		// }
+		// else if (header->type == 'm')
+		// {
+		// 	meminfo *tmp = malloc(sizeof(struct s_meminfo));
+		// 	rcv(tmp, sizeof(struct s_meminfo));
+		// 	mem_append(queue, tmp);
+		// }
+		// else if (header->type == 'n')
+		// {
+		// 	netinfo *tmp = malloc(sizeof(struct s_netinfo));
+		// 	rcv(tmp, sizeof(struct s_netinfo));
+		// 	net_append(queue, tmp);
+		// }
+		// else if (header->type == 'p')
+		// {
+		// 	int i = 0;
+		// 	plist *tmp = malloc(sizeof(struct s_plist));
+		// 	rcv(tmp, sizeof(struct s_plist));
+		// 	tmp->HEAD = malloc(sizeof(struct s_procinfo));
+		// 	tmp->HEAD->next = NULL;
+		// 	while (i <= tmp->len)
+		// 	{
+		// 		pinfo = malloc(sizeof(struct s_procinfo));
+		// 		rcv(pinfo, sizeof(struct s_procinfo));
+		// 		pinfo->cmdline = malloc(sizeof(char) * (pinfo->cmdline_len + 1));
+		// 		rcv(pinfo->cmdline, pinfo->cmdline_len);
+		// 		pinfo->cmdline[pinfo->cmdline_len] = '\0';
+		// 		append(tmp, pinfo);
 
-				i++;
-			}
-			plist_append(queue, tmp);
-		}
+		// 		i++;
+		// 	}
+		// 	plist_append(queue, tmp);
+		// }
 	}
 	close(serv_sock);
 	close(client_sock);
