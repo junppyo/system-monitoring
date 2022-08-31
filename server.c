@@ -1,6 +1,5 @@
 #include "server.h"
 
-
 int rcv(void *message, int size)
 {
 	char s[10];
@@ -9,13 +8,33 @@ int rcv(void *message, int size)
 	if (size <= 0)
 		return 0;
 	ret = read(client_sock, message, size);
+
 	if (ret < 0)
 	{
-		writelog(logfd, TRACE, "수신 실패");
+		if (ret < 0)
+			writelog(logfd, TRACE, "수신 실패");
 		return 0;
 	}
-	itoa(size, s);
-	writelog(logfd, TRACE, ft_strjoin(s, "byte 받음"));
+	if (ret < size)
+	{
+		char *s;
+		int tmp;
+		char *buf = malloc(size - ret);
+		while ((tmp = read(client_sock, buf, size - ret)) > 0)
+		{
+			s = make_packet(message, ret, buf, tmp);
+			ret += tmp;
+			free_s(message);
+			free_s(buf);
+			message = s;
+		}
+	}
+	if (ret != size)
+	{
+		return -1;
+	}
+	itoa(ret, s);
+	writelog(logfd, TRACE, ft_strjoin(s, "byte received"));
 	return ret;
 }
 
@@ -48,105 +67,112 @@ void *tcp_open(void *queu)
 
 	procinfo *pinfo;
 	plist *list;
-	// p_head *header = malloc(sizeof(struct s_packethead));
-	p_head *header;
+	p_head *header = malloc(sizeof(struct s_packethead));
 	char *buf = malloc(165483);
 	while (1)
 	{
 		int n = 0;
-		if (rcv(buf, 165483) <= 0)
+		if (rcv(header, sizeof(struct s_packethead)) <= 0)
 		{
 			client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
-			rcv(buf, 165483);
+			rcv(header, sizeof(struct s_packethead));
 		}
-		header = (p_head*) ft_substr(buf, 0, sizeof(p_head));
-		// printf("type: %c\n", header->type);
+		printf("type: %c, size: %d\n", header->type, header->size);
+		if (header->type != 'c' && header->type != 'm' && header->type != 'n' && header->type != 'p')
+		{
+			close(client_sock);
+			writelog(logfd, ERROR, "wrong packet received");
+			continue;
+		}
 		if (header->type == 'c')
 		{
-			cpu_append(queue, (cpuinfo *)ft_substr(buf, sizeof(p_head), sizeof(cpuinfo)));
+			cpuinfo *tmp = malloc(sizeof(struct s_cpuinfo));
+			if (rcv(tmp, sizeof(struct s_cpuinfo)) != sizeof(struct s_cpuinfo))
+			{
+				close(client_sock);
+				writelog(logfd, ERROR, "wrong packet received");
+				continue;
+			}
+			cpu_append(queue, tmp);
 		}
 		if (header->type == 'm')
-		{
-			mem_append(queue, (meminfo *)ft_substr(buf, sizeof(p_head), sizeof(meminfo)));
+		{	
+			meminfo *tmp = malloc(sizeof(struct s_meminfo));
+			if (rcv(tmp, sizeof(struct s_meminfo)) != sizeof(struct s_meminfo))
+			{
+				close(client_sock);
+				writelog(logfd, ERROR, "wrong packet received");
+				continue;
+			}
+			mem_append(queue, tmp);
 		}
 		if (header->type == 'n')
 		{
-			net_append(queue, (netinfo *)ft_substr(buf, sizeof(p_head), sizeof(netinfo)));
+			netinfo *tmp = malloc(sizeof(struct s_netinfo));
+			if (rcv(tmp, sizeof(struct s_netinfo)) != sizeof(struct s_netinfo))
+			{
+				close(client_sock);
+				writelog(logfd, ERROR, "wrong packet received");
+				continue;
+			}
+			net_append(queue, tmp);
 		}
-		// if (header->type == 'p')
-		// {
-		// 	int i = 0;
-		// 	int start = 0;
-		// 	list = ft_substr(buf, sizeof(p_head), sizeof(plist));
-		// 	list->HEAD = malloc(sizeof(struct s_procinfo));
-		// 	list->HEAD->next = NULL;
-		// 	start += sizeof(p_head) + sizeof(struct s_plist);
-		// 	printf("len %d\n", list->len);
-		// 	while (i <= 100)
-		// 	{
-		// 		pinfo = (procinfo *)ft_substr(buf, start, sizeof(procinfo));
-		// 		printf("%d\n", pinfo->cmdline_len);
-		// 		start += sizeof(procinfo);
-		// 		if (pinfo->cmdline_len){
-		// 			pinfo->cmdline = ft_substr(buf, start, pinfo->cmdline_len);
-		// 			start += pinfo->cmdline_len;
-		// 		}
-		// 		i++;
-		// 		append(list, pinfo);
-		// 	}
-		// 	plist_append(queue, list);
-		// }
-		// if (rcv(header, sizeof(struct s_packethead)) <= 0)
-		// {
-		// 	client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);_
-		// 	rcv(header, sizeof(struct s_packethead));
-		// }
-		// if (header->type == 'c')
-		// {
-		// 	cpuinfo *tmp = malloc(sizeof(struct s_cpuinfo));
-		// 	rcv(tmp, sizeof(struct s_cpuinfo));
-		// 	cpu_append(queue, tmp);
-		// }
-		// else if (header->type == 'm')
-		// {
-		// 	meminfo *tmp = malloc(sizeof(struct s_meminfo));
-		// 	rcv(tmp, sizeof(struct s_meminfo));
-		// 	mem_append(queue, tmp);
-		// }
-		// else if (header->type == 'n')
-		// {
-		// 	netinfo *tmp = malloc(sizeof(struct s_netinfo));
-		// 	rcv(tmp, sizeof(struct s_netinfo));
-		// 	net_append(queue, tmp);
-		// }
-		// else if (header->type == 'p')
-		// {
-		// 	int i = 0;
-		// 	plist *tmp = malloc(sizeof(struct s_plist));
-		// 	rcv(tmp, sizeof(struct s_plist));
-		// 	tmp->HEAD = malloc(sizeof(struct s_procinfo));
-		// 	tmp->HEAD->next = NULL;
-		// 	while (i <= tmp->len)
-		// 	{
-		// 		pinfo = malloc(sizeof(struct s_procinfo));
-		// 		rcv(pinfo, sizeof(struct s_procinfo));
-		// 		pinfo->cmdline = malloc(sizeof(char) * (pinfo->cmdline_len + 1));
-		// 		rcv(pinfo->cmdline, pinfo->cmdline_len);
-		// 		pinfo->cmdline[pinfo->cmdline_len] = '\0';
-		// 		append(tmp, pinfo);
-
-		// 		i++;
-		// 	}
-		// 	plist_append(queue, tmp);
-		// }
+		if (header->type == 'p')
+		{
+			int i = 0;
+			plist *tmp = malloc(sizeof(struct s_plist));
+			if (rcv(tmp, sizeof(struct s_plist)) != sizeof(struct s_plist))
+			{
+				close(client_sock);
+				writelog(logfd, ERROR, "wrong packet received");
+				continue;
+			}
+			tmp->HEAD = malloc(sizeof(struct s_procinfo));
+			tmp->HEAD->next = NULL;
+			while (i <= tmp->len)
+			{
+				pinfo = malloc(sizeof(procinfo));
+				if (rcv(pinfo, sizeof(procinfo)) != sizeof(procinfo))
+				{
+					close(client_sock);
+					writelog(logfd, ERROR, "wrong packet received");
+					continue;
+				}
+				if (pinfo->cmdline_len)
+				{
+					pinfo->cmdline = malloc(sizeof(char) * (pinfo->cmdline_len));
+					if (rcv(pinfo->cmdline, pinfo->cmdline_len) != pinfo->cmdline_len)
+					{
+						close(client_sock);
+						writelog(logfd, ERROR, "wrong packet received");
+						continue;
+					}
+				}
+				append(tmp, pinfo);
+				i++;
+			}
+			plist_append(queue, tmp);
+			break ;
+		}
 	}
 	close(serv_sock);
 	close(client_sock);
 	return 0;
 }
 
+void quit(int sig)
+{
+	fclose(logfd);
+	close(serv_sock);
+	close(client_sock);
+	exit(0);
+}
+
 int main()
 {
+	static struct sigaction	act;
+	act.sa_handler = quit;
+	sigaction(SIGINT, &act, NULL);
 	// daemon_init();
 	pthread_t p_thread;
 	pthread_t thread;
@@ -161,22 +187,25 @@ int main()
 	queue->plistqueue->next = NULL;
 
 	logfd = fopen("server_log", "a");
-	pthread_create(&p_thread, NULL, tcp_open, queue);
 	pthread_create(&thread, NULL, saver, (void *)queue);
+	pthread_create(&p_thread, NULL, tcp_open, queue);
 	
-	while (1)
-	{
-		// if (queue->cpuqueue->next)
-		// {
-		// 	cpuinfo *tmp = cpu_pop(queue);
-		// 	printf("%lu %lu %lu\n", tmp->cpu_usr, tmp->cpu_sys, tmp->cpu_iowait);
-		// }
-		// if (queue->memqueue->next)
-		// {
-		// 	meminfo *tmp = mem_pop(queue);
-		// 	printf("%lu %lu %lu\n", tmp->mem_free, tmp->mem_total, tmp->mem_used);
-		// }
-	}
+	// while (1)
+	// {
+	// }
+		sleep(3);
+	
+	pthread_mutex_destroy(&queue->cpu_mutex);
+	pthread_mutex_destroy(&queue->mem_mutex);
+	pthread_mutex_destroy(&queue->net_mutex);
+	pthread_mutex_destroy(&queue->plist_mutex);
+	free_s(queue->cpuqueue);
+	free_s(queue->memqueue);
+	free_s(queue->netqueue);
+	free_s(queue->plistqueue);
+
+	free_s(queue);
 	fclose(logfd);
+	
 	return 0;
 }

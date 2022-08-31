@@ -14,6 +14,7 @@ void snd(void *message, int size)
 		return ;
 	}
 	itoa(ret, s);
+	printf("%d send\n", ret);
 	writelog(logfd, TRACE, ft_strjoin(s, "byte send"));
 }
 
@@ -35,9 +36,6 @@ void reconnect(int sig)
 void connect_socket(packet *packet)
 {
 
-	static struct sigaction	act;
-	act.sa_handler = reconnect;
-	sigaction(SIGPIPE, &act, NULL);
 	my_sock = socket(PF_INET,SOCK_STREAM,IPPROTO_TCP);
 	if(my_sock == -1)
 		printf("socket error \n");
@@ -58,119 +56,87 @@ void connect_socket(packet *packet)
 				break;
 		}	
 	}
-		writelog(logfd, DEBUG, "연결 성공");
+	writelog(logfd, DEBUG, "연결 성공");
 	procinfo *pinfo;
 	p_head *header = malloc(sizeof(struct s_packethead));
 	plist *list;
-	plist *test;
 	while(1)
 	{
+
 		if (packet->cpuqueue->next)
 		{
 			header->type = 'c';
+			header->size = sizeof(p_head) + sizeof(cpuinfo);
 			cpuinfo *tmp = cpu_pop(packet);
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(cpuinfo));
+			printf("send cpu\n");
 			snd(message, sizeof(p_head) + sizeof(cpuinfo));
 			free_s(message);
+			free_s(tmp);
 		}
 		if (packet->memqueue->next)
 		{
 			header->type = 'm';
+			header->size = sizeof(p_head) + sizeof(meminfo);
 			meminfo *tmp = mem_pop(packet);
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(meminfo));
+			printf("send mem\n");
 			snd(message, sizeof(p_head) + sizeof(meminfo));
 			free_s(message);
+			free_s(tmp);
 		}
 		if (packet->netqueue->next)
 		{
 			header->type = 'n';
+			header->size = sizeof(p_head) + sizeof(netinfo);
 			netinfo *tmp = net_pop(packet);
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(netinfo));
+			printf("send net\n");
 			snd(message, sizeof(p_head) + sizeof(netinfo));
 			free_s(message);
+			free_s(tmp);
+			// break;
 		}
 
-		// if (packet->plistqueue->next)
-		// {
-		// 	header->type = 'p';
-		// 	list = plist_pop(packet);
-		// 	int size = 0;
-		// 	char *tmp = NULL;
-		// 	char *message = make_packet(header, sizeof(p_head), list, sizeof(plist));
-		// 	char *message;
-		// 	size += sizeof(p_head);
-		// 	size += sizeof(struct s_plist);
-		// 	int i = 0;
-		// 	while ((pinfo = pop(list)) != 0)
-		// 	{
-		// 		tmp = make_packet(message, size, pinfo, sizeof(procinfo));
-		// 		free_s(message);
-		// 		message = tmp;
-		// 		pinfo = (procinfo *)ft_substr(tmp, size, sizeof(procinfo));
-		// 		size += sizeof(procinfo);
-		// 		if (pinfo->cmdline_len)
-		// 		{
-		// 			tmp = make_packet(message, size, pinfo->cmdline, pinfo->cmdline_len);
-		// 			size += pinfo->cmdline_len;
-		// 			free_s(message);
-		// 			message = tmp;
-		// 		}
-		// 		i ++;
-		// 		if (i == 100)
-		// 			break;
-		// 	}
-		// 	snd(message, size);
-		// 	free_s(message);
-		// 	free_s(list->HEAD);
-		// 	free_s(list);
-		// }
+		if (packet->plistqueue->next)
+		{
+			header->type = 'p';
+			header->size = sizeof(p_head) + sizeof(plist);
+			list = plist_pop(packet);
+			int size = 0;
+			char *tmp = NULL;
+			char *message = NULL;
+			int i = 0;		
+			while ((pinfo = pop(list)) != 0)
+			{
+				// printf("pid: %d cmdline_lne: %d cmdline: %s ft_strlen: %d\n", pinfo->pid, pinfo->cmdline_len, pinfo->cmdline, ft_strlen(pinfo->cmdline));
+				tmp = make_packet(message, size, pinfo, sizeof(procinfo));
+				free_s(message);
+				message = tmp;
+				size += sizeof(procinfo);
+				if (pinfo->cmdline_len)
+				{
+					tmp = make_packet(message, size, pinfo->cmdline, pinfo->cmdline_len);
+					size += pinfo->cmdline_len;
+					free_s(message);
+					message = tmp;
+					free_s(pinfo->cmdline);
+				}
+				free_s(pinfo);
+				i++;
+			}
+			header->size = size + sizeof(plist);
+			tmp = make_packet(header, sizeof(p_head), list, sizeof(plist));
+			char *real = make_packet(tmp, sizeof(p_head)+sizeof(plist), message, size);
+			snd(real, sizeof(p_head)+sizeof(plist)+size);
+			free_s(message);
+			free_s(list->HEAD);
+			free_s(list);
+			free_s(tmp);
+			free_s(real);
+			// break ;
+		}
 
-		// if (packet->cpuqueue->next)
-		// {
-		// 	//lock
-		// 	header->type = 'c';
-		// 	cpuinfo *tmp = cpu_pop(packet);
-		// 	printf("%d\n", sizeof(cpuinfo));
-		// 	snd(header, sizeof(struct s_packethead));
-		// 	snd(tmp, sizeof(struct s_cpuinfo));
-		// 	free_s(tmp);
-		// }
-		// if (packet->memqueue->next)
-		// {
-		// 	header->type = 'm';
-		// 	meminfo *tmp = mem_pop(packet);
-		// 	snd(header, sizeof(struct s_packethead));
-		// 	snd(tmp, sizeof(struct s_meminfo));
-		// 	free_s(tmp);
-		// }
-		// if (packet->netqueue->next)
-		// {
-		// 	header->type = 'n';
-		// 	netinfo *tmp = net_pop(packet);
-		// 	snd(header, sizeof(struct s_packethead));
-		// 	snd(tmp, sizeof(struct s_netinfo));
-		// 	free_s(tmp);
-		// }
-		// if (packet->plistqueue->next)
-		// {
-		// 	header->type = 'p';
-		// 	snd(header, sizeof(struct s_packethead));
-		// 	plist *plist = plist_pop(packet);
-		// 	printf("%d\n", plist->len);
-		// 	snd(plist, sizeof(struct s_plist));
-
-		// 	while ((pinfo = pop(plist)) != 0)
-		// 	{
-		// 		printf("%d\n", pinfo->pid);
-		// 		snd(pinfo, sizeof(procinfo));
-		// 		snd(pinfo->cmdline, pinfo->cmdline_len);
-		// 		if (pinfo->cmdline_len)
-		// 			free_s(pinfo->cmdline);
-		// 		free_s(pinfo);
-		// 	}
-		// 	free_s(plist->HEAD);
-		// 	free_s(plist);
-		// }
 	}
 	free_s(header);
 	writelog(logfd, DEBUG, "전송 완료");

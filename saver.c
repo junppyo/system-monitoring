@@ -16,9 +16,9 @@ void send_query(char *s)
 {
 	// MYSQL_RES *res;
 	// MYSQL_ROW row;
-	write(1, s, ft_strlen(s));
-	write(1, "\n", 1);
-	mysql_query(conn, s);
+	// write(1, s, ft_strlen(s));
+	// write(1, "\n", 1);
+//	mysql_query(conn, s);
 	// res = mysql_use_result(conn);
 }
 
@@ -40,18 +40,21 @@ void *saver(void *queu)
 			cpuinfo *tmp = cpu_pop(queue);
 			sprintf(buf, "INSERT INTO cpuinfo (id, usr, sys, iowait, idle) VALUES (%d, %lu, %lu, %lu, %lu);", tmp->id, tmp->cpu_usr, tmp->cpu_sys, tmp->cpu_iowait, tmp->cpu_idle);
 			send_query(buf);
+			free_s(tmp);
 		}
 		if (queue->memqueue->next)
 		{
 			meminfo *tmp = mem_pop(queue);
 			sprintf(buf, "INSERT INTO meminfo (id, free, total, used, swap) VALUES (%d, %lu, %lu, %lu, %lu);", tmp->id, tmp->mem_free, tmp->mem_total, tmp->mem_used, tmp->mem_swap);
 			send_query(buf);
+			free_s(tmp);
 		}
 		if (queue->netqueue->next)
 		{
 			netinfo *tmp = net_pop(queue);
 			sprintf(buf, "INSERT INTO netinfo (id, in_cnt, in_byte, out_cnt, out_byte) VALUES (%d, %lu, %lu, %lu, %lu);", tmp->id, tmp->packet_in_cnt, tmp->packet_in_byte, tmp->packet_out_cnt, tmp->packet_out_byte);
 			send_query(buf);
+			free_s(tmp);
 		}
 		if (queue->plistqueue->next)
 		{
@@ -68,19 +71,20 @@ void *saver(void *queu)
 					tmp2 = ft_strjoin(s, buf);
 					free_s(s);
 					s = tmp2;
+					free_s(pinfo->cmdline);
+					free_s(pinfo);
 				}
 				else
 				{
 
 					sprintf(buf, "INSERT INTO procinfo (id, name, uname, pid, ppid, cpuusage, cputime) VALUES (%d, \"%s\", \"%s\", %d, %d, %f, %f);\n", tmp->id, pinfo->name, pinfo->uname, pinfo->pid, pinfo->ppid, pinfo->cpuusage, pinfo->cputime);
 					send_query(buf);
-					tmp2 = ft_strjoin(s, buf);
-					free_s(s);
-					s = tmp2;
+					free_s(pinfo);
 				}
 			}
 			send_query(s);
 			free_s(s);
+			free_s(tmp);
 		}
 	}
 

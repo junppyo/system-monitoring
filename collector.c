@@ -6,6 +6,7 @@ void *cpu_collect(void *packe)
 	while (1)
 	{
 		read_cpu(packet);
+		writelog(logfd, TRACE, "collected cpu info");
 		usleep(CPU_CYCLE);
 	}
 	return (0);
@@ -17,6 +18,7 @@ void *mem_collect(void *packe)
 	while (1)
 	{
 		read_mem(packet);
+		writelog(logfd, TRACE, "collected memory info");
 		usleep(MEM_CYCLE);
 	}
 	return (0);
@@ -28,6 +30,7 @@ void *net_collect(void *packe)
 	while (1)
 	{
 		read_net(packet);
+		writelog(logfd, TRACE, "collected network info");
 		usleep(NET_CYCLE);
 	}
 	return (0);
@@ -39,6 +42,7 @@ void *proc_collect(void *packe)
 	while (1)
 	{
 		read_proc(packet);
+		writelog(logfd, TRACE, "collected process info");
 		usleep(PROC_CYCLE);
 	}
 	return 0;

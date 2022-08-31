@@ -1,13 +1,5 @@
 #include "client.h"
 
-int my_sock;
-struct sockaddr_in serv_addr;
-FILE *logfd;
-unsigned int CPU_CYCLE;
-unsigned int MEM_CYCLE;
-unsigned int NET_CYCLE;
-unsigned int PROC_CYCLE;
-int clientid;
 
 packet *init(void)
 {
@@ -68,10 +60,23 @@ packet *init(void)
 	return (queue);
 }
 
+void quit(int sig)
+{
+	fclose(logfd);
+	exit(0);
+}
+
+
 int main()
 {
-    setbuf(stdout, NULL);
+	setbuf(stdout, NULL);
 
+	static struct sigaction	act;
+	act.sa_handler = quit;
+	sigaction(SIGINT, &act, NULL);
+	
+	act.sa_handler = reconnect;
+	sigaction(SIGPIPE, &act, NULL);
 	// daemon_init();
 	packet *queue = init();
 	pthread_t thread;

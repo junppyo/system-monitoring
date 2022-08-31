@@ -66,6 +66,7 @@ int getsize(plist *list);
 typedef struct s_packethead
 {
 	char type;
+	int size;
 } p_head;
 
 typedef struct s_packet
@@ -99,3 +100,5 @@ extern unsigned int MEM_CYCLE;
 extern unsigned int NET_CYCLE;
 extern unsigned int PROC_CYCLE;
 extern int clientid;
+
+extern FILE *logfd;

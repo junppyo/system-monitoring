@@ -136,7 +136,7 @@ void read_proc(packet *node)
 	int hertz = sysconf(_SC_CLK_TCK);
 	unsigned long long starttime;
 	dp = opendir("/proc");
-	if (!dp)	
+	if (!dp)
 		printf("open /proc error\n");
 	while ((dirp = readdir(dp)) != NULL)
 	{

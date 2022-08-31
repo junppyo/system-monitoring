@@ -49,6 +49,7 @@ int getsize(plist *list)
 void cpu_append(packet *packet, cpuinfo *node)
 {
 	pthread_mutex_lock(&packet->cpu_mutex);
+//	printf("cpu append\n");
 	node->next = NULL;
 	int i =0;
 	if (!packet->cpuqueue->next)
@@ -92,7 +93,6 @@ void mem_append(packet *packet, meminfo *node)
 		tmp->next = node;
 	}
 	pthread_mutex_unlock(&packet->mem_mutex);
-
 }
 
 meminfo *mem_pop(packet *packet)
