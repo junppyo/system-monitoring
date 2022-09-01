@@ -81,6 +81,10 @@ int main()
 	packet *queue = init();
 	pthread_t thread;
 
+	char s[100];
+
+	sprintf(s, "client id %d is start", clientid);
+	writelog(logfd, DEBUG, s);
 	collect(queue);
 	connect_socket(queue);
 	

@@ -14,7 +14,6 @@
 
 extern int my_sock;
 extern struct sockaddr_in serv_addr;
-extern FILE *logfd;
 
 
 void snd(void *message, int size);

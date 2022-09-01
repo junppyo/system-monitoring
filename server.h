@@ -13,11 +13,12 @@
 #include "saver.h"
 #include <fcntl.h>
 
-int rcv(void *message, int size);
+int rcv(int fd, void *message, int size);
 
-int serv_sock;
-int client_sock;
+int num = 0;
 extern FILE *logfd;
+int serv_sock;
+struct sockaddr_in serv_addr;
 #define DEFAULT_PORT 4242
 
 #endif

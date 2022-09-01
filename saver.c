@@ -16,8 +16,8 @@ void send_query(char *s)
 {
 	// MYSQL_RES *res;
 	// MYSQL_ROW row;
-	// write(1, s, ft_strlen(s));
-	// write(1, "\n", 1);
+	write(1, s, ft_strlen(s));
+	write(1, "\n", 1);
 //	mysql_query(conn, s);
 	// res = mysql_use_result(conn);
 }
@@ -72,22 +72,20 @@ void *saver(void *queu)
 					free_s(s);
 					s = tmp2;
 					free_s(pinfo->cmdline);
-					free_s(pinfo);
 				}
 				else
 				{
-
 					sprintf(buf, "INSERT INTO procinfo (id, name, uname, pid, ppid, cpuusage, cputime) VALUES (%d, \"%s\", \"%s\", %d, %d, %f, %f);\n", tmp->id, pinfo->name, pinfo->uname, pinfo->pid, pinfo->ppid, pinfo->cpuusage, pinfo->cputime);
 					send_query(buf);
-					free_s(pinfo);
 				}
+				free_s(pinfo);
 			}
 			send_query(s);
 			free_s(s);
 			free_s(tmp);
+			// break;
 		}
 	}
-
 	return 0;
 
 }
