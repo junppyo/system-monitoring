@@ -1,2 +1,2 @@
 #!/bin/sh
-LD_PRELOAD=./preload.so ./client
+LD_PRELOAD=./client/preload/preload.so ./client/client

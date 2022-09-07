@@ -69,7 +69,7 @@ void connect_socket(packet *packet)
 			header->size = sizeof(p_head) + sizeof(cpuinfo);
 			cpuinfo *tmp = cpu_pop(packet);
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(cpuinfo));
-			printf("send cpu %d\n",tmp->id);
+			printf("send cpu\n");
 			snd(message, sizeof(p_head) + sizeof(cpuinfo));
 			free_s(message);
 			free_s(tmp);
