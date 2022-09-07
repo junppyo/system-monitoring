@@ -157,3 +157,29 @@ plist *plist_pop(packet *packet)
 	pthread_mutex_unlock(&packet->plist_mutex);
 	return ret;
 }
+
+
+void udp_append(packet *queue, udppacket *node)
+{
+	node->next = NULL;
+	pthread_mutex_lock(&queue->udp_mutex);
+	if (!queue->udpqueue->next)
+		queue->udpqueue->next = node;
+	else
+	{
+		udppacket *tmp = queue->udpqueue->next;
+		while (tmp->next)
+			tmp = tmp->next;
+		tmp->next = node;
+	}
+	pthread_mutex_unlock(&queue->udp_mutex);
+
+}
+udppacket *udp_pop(packet *queue)
+{
+	pthread_mutex_lock(&queue->udp_mutex);
+	udppacket *ret = queue->udpqueue->next;
+	queue->udpqueue->next = queue->udpqueue->next->next;
+	pthread_mutex_unlock(&queue->udp_mutex);
+	return ret;
+}

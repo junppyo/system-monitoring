@@ -83,7 +83,13 @@ void *saver(void *queu)
 			send_query(s);
 			free_s(s);
 			free_s(tmp);
-			// break;
+		}
+		if (queue->udpqueue->next)
+		{
+			udppacket *tmp = udp_pop(queue);
+			sprintf(buf, "INSERT INTO udp (id, pid, ip, port, begintime, pkt_no, byte, elapse_time) VALUES (%d, %lu, %s, %d, %lu, %d, %d, %lf);", tmp->id, tmp->pid, tmp->ip, tmp->port, tmp->begintime, tmp->pkt_no, tmp->byte, tmp->elapse_time);
+			send_query(buf);
+			free_s(tmp);
 		}
 	}
 	return 0;

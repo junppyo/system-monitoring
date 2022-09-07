@@ -69,17 +69,51 @@ typedef struct s_packethead
 	int size;
 } p_head;
 
+typedef struct s_udpbegin
+{
+	int id;
+	unsigned long pid;
+	char ip[15];
+	int port;
+	clock_t begintime;
+	int pkt_no;
+} udpbegin;
+
+typedef struct s_udpend
+{
+	int id;
+	unsigned long pid;
+	int byte;
+	double elapse_time;
+} udpend;
+
+typedef struct s_udppacket
+{
+	int id;
+	unsigned long pid;
+	char ip[15];
+	int port;
+	unsigned long begintime;
+	int pkt_no;
+	int byte;
+	double elapse_time;
+	struct s_udppacket *next;
+
+} udppacket;
+
 typedef struct s_packet
 {
 	struct s_cpuinfo *cpuqueue;
 	struct s_meminfo *memqueue;
 	struct s_netinfo *netqueue;
 	struct s_plist *plistqueue;
+	struct s_udppacket *udpqueue;
 
 	pthread_mutex_t cpu_mutex;
 	pthread_mutex_t mem_mutex;
 	pthread_mutex_t net_mutex;
 	pthread_mutex_t plist_mutex;
+	pthread_mutex_t udp_mutex;
 } packet;
 
 void cpu_append(packet *packet, cpuinfo *node);
@@ -93,6 +127,10 @@ netinfo *net_pop(packet *packet);
 
 void plist_append(packet *packet, plist *node);
 plist *plist_pop(packet *packet);
+
+void udp_append(packet *queue, udppacket *node);
+udppacket *udp_pop(packet *queue);
+
 #endif
 
 extern unsigned int CPU_CYCLE;

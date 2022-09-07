@@ -15,7 +15,7 @@ packet *init(void)
 	queue->netqueue = malloc(sizeof(netinfo));
 	queue->netqueue->next = NULL;
 
-	
+
 	FILE *config = fopen("client.config", "r");
 	if (!config)
 	{

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "struct.h"
+#include <sqlext.h>
 #include "/usr/include/mysql/mysql.h"
 #include "utils.h"
 
