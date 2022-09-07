@@ -9,6 +9,9 @@
 #include <arpa/inet.h>
 #include "struct.h"
 #include "utils.h"
+#include <time.h>
+#include <sys/time.h>
+
 #define DEFAULT_PORT 4243
 #define DEFAULT_IP "127.0.0.1"
 int my_sock;
@@ -18,9 +21,27 @@ udpend *udp_end_packet;
 int clientid;
 
 static int num = 0;
+static int statictime;
+static udpmatric matric;
 
 ssize_t (*origin_write)(int fd, const void *buf, size_t n);
 ssize_t (*new_write)(int fd, const void *buf, size_t n);
+
+int oneminute()
+{
+	if (!statictime)
+	{
+		statictime = time(NULL);
+		return 0;
+	}
+	int now = time(NULL);
+	if (statictime <= now - 30)
+	{
+		statictime = now;
+		return 1;
+	}
+	return 0;
+}
 
 void __attribute__((constructor)) execute()
 {
@@ -45,6 +66,12 @@ void __attribute__((constructor)) execute()
 	tmp = strtok(buf, "=");
 	tmp = strtok(NULL, "=");
 	clientid = atoi(tmp);
+	matric.id = clientid;
+	matric.call_count = 0;
+	matric.max_elapse = 0;
+	matric.avg_elapse = 0;
+	matric.max_byte = 0;
+	matric.avg_byte = 0;
 }
 
 void getInfo(int fd)
@@ -73,8 +100,31 @@ ssize_t write (int fd, const void *buf, size_t n)
 	udp_begin_packet->begintime = clock();
 	udp_end_packet->byte = (*origin_write)(fd, buf, n);
 	udp_end_packet->elapse_time = (double)(clock() - udp_begin_packet->begintime) / CLOCKS_PER_SEC;
+	if (oneminute())
+		udp_end_packet->flag = 1;
+	else
+		udp_end_packet->flag = 0;
 	sendto(my_sock, udp_end_packet, sizeof(struct s_udpend), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
-	// printf("id: %d\npid: %lu\nip: %s\nport: %d\nbegintime: %ld\npkt_no: %d\nbyte: %d, elapsetime: %lf\n", udp_begin_packet->id, udp_begin_packet->pid, udp_begin_packet->ip, udp_begin_packet->port, udp_begin_packet->begintime, udp_begin_packet->pkt_no, udp_end_packet->byte, udp_end_packet->elapse_time);
+
+	matric.call_count++;
+	if (matric.max_elapse < udp_end_packet->elapse_time)
+		matric.max_elapse = udp_end_packet->elapse_time;
+	if (matric.max_byte < udp_end_packet->byte)
+		matric.max_byte = udp_end_packet->byte;
+	matric.avg_elapse += udp_end_packet->elapse_time;
+	matric.avg_byte += udp_end_packet->byte;
+
+	if (udp_end_packet->flag)
+	{
+		matric.avg_byte /= matric.call_count;
+		matric.avg_elapse /= matric.call_count;
+		sendto(my_sock, &matric, sizeof(struct s_udpmatric), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+		matric.call_count = 0;
+		matric.max_elapse = 0;
+		matric.avg_elapse = 0;
+		matric.max_byte = 0;
+		matric.avg_byte = 0;		
+	}
 	return udp_end_packet->byte;
 }
 

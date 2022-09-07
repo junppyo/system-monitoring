@@ -14,7 +14,8 @@ packet *init(void)
 	queue->plistqueue->next = NULL;
 	queue->netqueue = malloc(sizeof(netinfo));
 	queue->netqueue->next = NULL;
-
+	queue->matricqueue = malloc(sizeof(udpmatric));
+	queue->matricqueue->next = NULL;
 
 	FILE *config = fopen("client.config", "r");
 	if (!config)

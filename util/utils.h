@@ -16,7 +16,6 @@
 #define INFO 2
 #define ERROR 3
 
-
 char	**ft_split(char const *s, char c);
 char	*ft_substr(char const *s, unsigned int start, size_t len);
 char	*ft_strdup(char *src);

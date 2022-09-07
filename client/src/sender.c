@@ -98,44 +98,44 @@ void connect_socket(packet *packet)
 			// break;
 		}
 
-		if (packet->plistqueue->next)
-		{
-			header->type = 'p';
-			header->size = sizeof(p_head) + sizeof(plist);
-			list = plist_pop(packet);
-			int size = 0;
-			char *tmp = NULL;
-			char *message = NULL;
-			int i = 0;		
-			while ((pinfo = pop(list)) != 0)
-			{
-				// printf("pid: %d cmdline_lne: %d cmdline: %s ft_strlen: %d\n", pinfo->pid, pinfo->cmdline_len, pinfo->cmdline, ft_strlen(pinfo->cmdline));
-				tmp = make_packet(message, size, pinfo, sizeof(procinfo));
-				free_s(message);
-				message = tmp;
-				size += sizeof(procinfo);
-				if (pinfo->cmdline_len)
-				{
-					tmp = make_packet(message, size, pinfo->cmdline, pinfo->cmdline_len);
-					size += pinfo->cmdline_len;
-					free_s(message);
-					message = tmp;
-					free_s(pinfo->cmdline);
-				}
-				free_s(pinfo);
-				i++;
-			}
-			header->size = size + sizeof(plist);
-			tmp = make_packet(header, sizeof(p_head), list, sizeof(plist));
-			char *real = make_packet(tmp, sizeof(p_head)+sizeof(plist), message, size);
-			snd(real, sizeof(p_head)+sizeof(plist)+size);
-			free_s(message);
-			free_s(list->HEAD);
-			free_s(list);
-			free_s(tmp);
-			free_s(real);
-			// break ;
-		}
+		// if (packet->plistqueue->next)
+		// {
+		// 	header->type = 'p';
+		// 	header->size = sizeof(p_head) + sizeof(plist);
+		// 	list = plist_pop(packet);
+		// 	int size = 0;
+		// 	char *tmp = NULL;
+		// 	char *message = NULL;
+		// 	int i = 0;		
+		// 	while ((pinfo = pop(list)) != 0)
+		// 	{
+		// 		// printf("pid: %d cmdline_lne: %d cmdline: %s ft_strlen: %d\n", pinfo->pid, pinfo->cmdline_len, pinfo->cmdline, ft_strlen(pinfo->cmdline));
+		// 		tmp = make_packet(message, size, pinfo, sizeof(procinfo));
+		// 		free_s(message);
+		// 		message = tmp;
+		// 		size += sizeof(procinfo);
+		// 		if (pinfo->cmdline_len)
+		// 		{
+		// 			tmp = make_packet(message, size, pinfo->cmdline, pinfo->cmdline_len);
+		// 			size += pinfo->cmdline_len;
+		// 			free_s(message);
+		// 			message = tmp;
+		// 			free_s(pinfo->cmdline);
+		// 		}
+		// 		free_s(pinfo);
+		// 		i++;
+		// 	}
+		// 	header->size = size + sizeof(plist);
+		// 	tmp = make_packet(header, sizeof(p_head), list, sizeof(plist));
+		// 	char *real = make_packet(tmp, sizeof(p_head)+sizeof(plist), message, size);
+		// 	snd(real, sizeof(p_head)+sizeof(plist)+size);
+		// 	free_s(message);
+		// 	free_s(list->HEAD);
+		// 	free_s(list);
+		// 	free_s(tmp);
+		// 	free_s(real);
+		// 	// break ;
+		// }
 
 	}
 	free_s(header);

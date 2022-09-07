@@ -83,6 +83,12 @@ void *udp_open(void *queu)
 		tmp->byte = end->byte;
 		tmp->elapse_time = end->elapse_time;
 		udp_append(queue, tmp);
+		if (end->flag)
+		{
+			udpmatric *matric = malloc(sizeof(udpmatric));
+			rcv(s, matric, sizeof(udpmatric));
+			matric_append(queue, matric);
+		}
 	}
 	return 0;
 }

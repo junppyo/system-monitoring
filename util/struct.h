@@ -85,6 +85,7 @@ typedef struct s_udpend
 	unsigned long pid;
 	int byte;
 	double elapse_time;
+	int flag;
 } udpend;
 
 typedef struct s_udppacket
@@ -101,6 +102,18 @@ typedef struct s_udppacket
 
 } udppacket;
 
+typedef struct s_udpmatric
+{
+//	call count, max elapse, avg elapse, max byte, avg byte
+	int id;
+	int call_count;
+	double max_elapse;
+	double avg_elapse;
+	int max_byte;
+	int avg_byte;
+	struct s_udpmatric *next;
+} udpmatric;
+
 typedef struct s_packet
 {
 	struct s_cpuinfo *cpuqueue;
@@ -108,12 +121,14 @@ typedef struct s_packet
 	struct s_netinfo *netqueue;
 	struct s_plist *plistqueue;
 	struct s_udppacket *udpqueue;
+	struct s_udpmatric *matricqueue;
 
 	pthread_mutex_t cpu_mutex;
 	pthread_mutex_t mem_mutex;
 	pthread_mutex_t net_mutex;
 	pthread_mutex_t plist_mutex;
 	pthread_mutex_t udp_mutex;
+	pthread_mutex_t matric_mutex;
 } packet;
 
 void cpu_append(packet *packet, cpuinfo *node);
@@ -130,6 +145,9 @@ plist *plist_pop(packet *packet);
 
 void udp_append(packet *queue, udppacket *node);
 udppacket *udp_pop(packet *queue);
+
+void matric_append(packet *queue, udpmatric *node);
+udpmatric *matric_pop(packet *queue);
 
 #endif
 

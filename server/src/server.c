@@ -23,6 +23,8 @@ packet *queue_init()
 	queue->plistqueue->next = NULL;
 	queue->udpqueue = malloc(sizeof(udppacket));
 	queue->udpqueue->next = NULL;
+	queue->matricqueue = malloc(sizeof(udpmatric));
+	queue->matricqueue->next = NULL;
 	pthread_mutex_unlock(&queue->cpu_mutex);
 	pthread_mutex_unlock(&queue->mem_mutex);
 	pthread_mutex_unlock(&queue->net_mutex);

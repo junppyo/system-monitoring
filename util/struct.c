@@ -183,3 +183,29 @@ udppacket *udp_pop(packet *queue)
 	pthread_mutex_unlock(&queue->udp_mutex);
 	return ret;
 }
+
+
+void matric_append(packet *queue, udpmatric *node)
+{
+	node->next = NULL;
+	pthread_mutex_lock(&queue->matric_mutex);
+	if (!queue->matricqueue->next)
+		queue->matricqueue->next = node;
+	else
+	{
+		udpmatric *tmp = queue->matricqueue->next;
+		while (tmp->next)
+			tmp = tmp->next;
+		tmp->next = node;
+	}
+	pthread_mutex_unlock(&queue->matric_mutex);
+
+}
+udpmatric *matric_pop(packet *queue)
+{
+	pthread_mutex_lock(&queue->matric_mutex);
+	udpmatric *ret = queue->matricqueue->next;
+	queue->matricqueue->next = queue->matricqueue->next->next;
+	pthread_mutex_unlock(&queue->matric_mutex);
+	return ret;	
+}

@@ -91,6 +91,13 @@ void *saver(void *queu)
 			send_query(buf);
 			free_s(tmp);
 		}
+		if (queue->matricqueue->next)
+		{
+			udpmatric *tmp = matric_pop(queue);
+			sprintf(buf, "INSERT INTO udpmatric (id, call_count, max_elapse, avg_elapse, max_byte, avg_byte) VALUES (%d, %d, %lf, %lf, %d, %d);", tmp->id, tmp->call_count, tmp->max_elapse, tmp->avg_elapse, tmp->max_byte, tmp->avg_byte);
+			send_query(buf);
+			free_s(tmp);
+		}
 	}
 	return 0;
 
