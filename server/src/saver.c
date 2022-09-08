@@ -19,8 +19,10 @@ void send_query(char *s)
 	write(1, s, ft_strlen(s));
 	write(1, "\n", 1);
 //	mysql_query(conn, s);
-	// res = mysql_use_result(conn);
 }
+
+
+// create new thread in saver, for delta, avg
 
 void *saver(void *queu)
 {

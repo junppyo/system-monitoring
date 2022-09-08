@@ -4,7 +4,7 @@
 packet *init(void)
 {
 	logfd = fopen("client_log", "a");
-
+	flag = 1;
 	packet *queue = malloc(sizeof(packet));
 	queue->cpuqueue = malloc(sizeof(cpuinfo));
 	queue->cpuqueue->next = NULL;
@@ -76,8 +76,6 @@ int main()
 	act.sa_handler = quit;
 	sigaction(SIGINT, &act, NULL);
 	
-	act.sa_handler = reconnect;
-	sigaction(SIGPIPE, &act, NULL);
 	// daemon_init();
 	packet *queue = init();
 	pthread_t thread;
@@ -87,10 +85,16 @@ int main()
 	sprintf(s, "client id %d is start", clientid);
 	writelog(logfd, DEBUG, s);
 	collect(queue);
-	connect_socket(queue);
+	pthread_create(&thread, NULL, connect_socket,(void*)queue);
+	// connect_socket(queue);
 	
 	while (1)
 	{
+		if (flag == 2)
+		{
+			collect(queue);
+			flag = 1;
+		}
 	}
 	
 	free_s(queue->cpuqueue);

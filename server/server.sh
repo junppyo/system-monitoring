@@ -1,2 +1,2 @@
 #!/bin/sh
-./server/server
+./server

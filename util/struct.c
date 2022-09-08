@@ -28,8 +28,9 @@ procinfo *pop(plist *list)
 		list->TAIL = NULL;
 		list->HEAD->next = NULL;
 	}
-	else
+	else{
 		list->HEAD->next = list->HEAD->next->next;
+	}
 	return tmp;
 }
 

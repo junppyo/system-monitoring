@@ -14,5 +14,6 @@ unsigned int MEM_CYCLE;
 unsigned int NET_CYCLE;
 unsigned int PROC_CYCLE;
 int clientid;
+int flag;
 
 #endif
