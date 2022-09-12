@@ -13,6 +13,7 @@ typedef struct s_cpuinfo
 	unsigned long cpu_sys;
 	unsigned long cpu_iowait;
 	unsigned long cpu_idle;
+	float delta_usage;
 	struct s_cpuinfo *next;
 } cpuinfo;
 
@@ -23,6 +24,7 @@ typedef struct s_meminfo
 	unsigned long mem_total;
 	unsigned long mem_used;
 	unsigned long mem_swap;
+	float delta_usage;
 	struct s_meminfo *next;
 } meminfo;
 
@@ -58,6 +60,27 @@ typedef struct s_plist
 	int len;
 	struct s_plist *next;
 } plist;
+
+typedef struct s_diskinfo
+{
+	int id;
+	char name[128];
+	char type[32];
+	unsigned long total;
+	unsigned long used;
+	unsigned long available;
+	char mounted[512];
+	struct s_diskinfo *next;
+} diskinfo;
+
+typedef struct s_disklist
+{
+	int id;
+	diskinfo *HEAD;
+	diskinfo *TAIL;
+	int len;
+	struct s_disklist *next;
+} disklist;
 
 void append(plist *list, procinfo *node);
 procinfo *pop(plist *list);
@@ -122,6 +145,7 @@ typedef struct s_packet
 	struct s_plist *plistqueue;
 	struct s_udppacket *udpqueue;
 	struct s_udpmatric *matricqueue;
+	struct s_disklist *diskqueue;
 
 	pthread_mutex_t cpu_mutex;
 	pthread_mutex_t mem_mutex;
@@ -129,6 +153,7 @@ typedef struct s_packet
 	pthread_mutex_t plist_mutex;
 	pthread_mutex_t udp_mutex;
 	pthread_mutex_t matric_mutex;
+	pthread_mutex_t disk_mutex;
 } packet;
 
 void cpu_append(packet *packet, cpuinfo *node);
@@ -148,6 +173,12 @@ udppacket *udp_pop(packet *queue);
 
 void matric_append(packet *queue, udpmatric *node);
 udpmatric *matric_pop(packet *queue);
+
+void disk_append(disklist *list, diskinfo *node);
+diskinfo *disk_pop(disklist *list);
+
+void disklist_append(packet *packet, disklist *node);
+disklist *disklist_pop(packet *queue);
 
 #endif
 

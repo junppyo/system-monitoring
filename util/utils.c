@@ -287,6 +287,15 @@ int daemon_init(void)
 
 char *make_packet(void *s1, int size1, void *s2, int size2)
 {
+	if (!s2)
+	{
+		char *ret = malloc(size1);
+		int i = -1;
+
+		while (++i < size1)
+			ret[i] = ((char *)s1)[i];
+		return ret;
+	}
 	char *ret = malloc(size1 + size2);
 	int i = -1;
 

@@ -36,6 +36,7 @@ int rcv(int fd, void *message, int size)
 	}
 	itoa(ret, s);
 	writelog(logfd, TRACE, ft_strjoin(s, "byte received"));
+	// printf("%d received\n", ret);
 	return ret;
 }
 
@@ -67,9 +68,7 @@ void *udp_open(void *queu)
 	udpend *end = malloc(sizeof(udpend));
 	while (1)
 	{
-		printf("udp start\n");
 		rcv(s, begin, sizeof(udpbegin));
-		printf("begin recevied\n");
 		rcv(s, end, sizeof(udpend));
 		udppacket *tmp = malloc(sizeof(udppacket));
 		tmp->id = begin->id;
@@ -131,7 +130,7 @@ void *tcp_open(void *queu)
 	pthread_create(&thread, NULL, tcp_open, queu);
 
 	procinfo *pinfo;
-	plist *list;
+	diskinfo *dinfo;
 	p_head *header = malloc(sizeof(struct s_packethead));
 	char *buf = malloc(165483);
 
@@ -144,8 +143,8 @@ void *tcp_open(void *queu)
 			writelog(logfd, TRACE, "client reconnect");
 			rcv(client_sock, header, sizeof(struct s_packethead));
 		}
-		printf("type: %c, size: %d\n", header->type, header->size);
-		if (header->type != 'c' && header->type != 'm' && header->type != 'n' && header->type != 'p')
+		// printf("type: %c, size: %d\n", header->type, header->size);
+		if (header->type != 'c' && header->type != 'm' && header->type != 'n' && header->type != 'p' && header->type != 'd')
 		{
 			close(client_sock);
 			writelog(logfd, ERROR, "wrong packet received");
@@ -220,6 +219,33 @@ void *tcp_open(void *queu)
 			}
 			plist_append(queue, tmp);
 			// break ;
+		}
+		if (header->type == 'd')
+		{
+			int i = 0;
+			disklist *tmp = malloc(sizeof(struct s_disklist));
+			if (rcv(client_sock, tmp, sizeof(struct s_disklist)) != sizeof(struct s_disklist))
+			{
+				close(client_sock);
+				writelog(logfd, ERROR, "wrong packet received");
+				return 0;
+			}
+			tmp->HEAD = malloc(sizeof(struct s_diskinfo));
+			tmp->HEAD->next = NULL;
+			while (i < tmp->len)
+			{
+				dinfo = malloc(sizeof(diskinfo));
+				if (rcv(client_sock, dinfo, sizeof(diskinfo)) != sizeof(diskinfo))
+				{
+					close(client_sock);
+					writelog(logfd, ERROR, "wrong packet received");
+					return 0;
+				}
+				// printf("%d %s %s %lu %lu %s\n", dinfo->id, dinfo->name, dinfo->type, dinfo->total, dinfo->used, dinfo->mounted);
+				disk_append(tmp, dinfo);
+				i++;
+			}
+			disklist_append(queue, tmp);
 		}
 	}
 	close(serv_sock);

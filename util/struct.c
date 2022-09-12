@@ -159,7 +159,6 @@ plist *plist_pop(packet *packet)
 	return ret;
 }
 
-
 void udp_append(packet *queue, udppacket *node)
 {
 	node->next = NULL;
@@ -209,4 +208,64 @@ udpmatric *matric_pop(packet *queue)
 	queue->matricqueue->next = queue->matricqueue->next->next;
 	pthread_mutex_unlock(&queue->matric_mutex);
 	return ret;	
+}
+
+void disk_append(disklist *list, diskinfo *node)
+{
+	if (!list->HEAD->next)
+	{
+		node->next = NULL;
+		list->HEAD->next = node;
+		list->TAIL = node;
+	}
+	else
+	{
+		node->next = NULL;
+		list->TAIL->next = node;
+		list->TAIL = node;
+	}
+}
+
+diskinfo *disk_pop(disklist *list)
+{
+	if (!list->TAIL)
+		return 0;
+	diskinfo *tmp;
+	tmp = list->HEAD->next;
+	if (list->HEAD->next == list->TAIL)
+	{
+		list->TAIL = NULL;
+		list->HEAD->next = NULL;
+	}
+	else{
+		list->HEAD->next = list->HEAD->next->next;
+	}
+	return tmp;
+}
+
+void disklist_append(packet *packet, disklist *node)
+{
+	pthread_mutex_lock(&packet->disk_mutex);
+	node->next = NULL;
+	if (!packet->diskqueue->next)
+	{
+		packet->diskqueue->next = node;
+	}
+	else
+	{
+		disklist *tmp = packet->diskqueue;
+		while (tmp->next)
+			tmp = tmp->next;
+		tmp->next = node;
+	}
+	pthread_mutex_unlock(&packet->disk_mutex);
+}
+
+disklist *disklist_pop(packet *packet)
+{
+	pthread_mutex_lock(&packet->disk_mutex);
+	disklist *ret = packet->diskqueue->next;
+	packet->diskqueue->next = packet->diskqueue->next->next;
+	pthread_mutex_unlock(&packet->disk_mutex);
+	return ret;
 }

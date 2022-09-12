@@ -4,7 +4,11 @@ static void copy(char *s1, char *s2)
 {
 	int i = -1;
 	while (s2[++i])
+	{
+		if (s2[i] == '\n')
+			break;
 		s1[i] = s2[i];
+	}
 	s1[i] = '\0';
 }
 
@@ -201,4 +205,54 @@ void read_proc(packet *node)
 	list->id = clientid;
 	list->len = getsize(list);
 	plist_append(node, list);
+}
+
+void read_disk(packet *node)
+{
+	FILE *fp;
+	disklist *list = malloc(sizeof(disklist));
+	list->HEAD = malloc(sizeof(diskinfo));
+	list->HEAD->next = NULL;
+	char *ret = NULL;
+	char *tmp;
+	char buf[1024];
+	int len = 0;
+	diskinfo *info;
+	fp = popen("df -T", "r");
+	fgets(buf, sizeof(buf), fp);
+	while (fgets(buf, sizeof(buf), fp) != NULL)
+	{
+		int i = 0;
+		tmp = strtok(buf, " ");
+		info = malloc(sizeof(diskinfo));
+		while (tmp != NULL)
+		{
+			i++;
+			if (i == 1)
+				copy(&info->name[0], tmp);
+			else if (i == 2)
+				copy(&info->type[0], tmp);
+			else if (i == 3)
+				info->total = atoi(tmp);
+			else if (i == 4)
+				info->used = atoi(tmp);
+			else if (i == 5)
+				info->available = atoi(tmp);
+			else if (i == 7)
+				copy(&info->mounted[0], tmp);
+			else if (i > 7){
+				int len2 = ft_strlen(info->mounted);
+				info->mounted[len2] = ' ';
+				info->mounted[len2 + 1] = '\0';
+				copy(&info->mounted[ft_strlen(info->mounted)], tmp);
+			}
+			tmp = strtok(NULL, " ");
+		}
+		disk_append(list, info);
+		len++;
+	}
+	list->len = len;
+	list->id = clientid;
+	disklist_append(node, list);
+	pclose(fp);
 }

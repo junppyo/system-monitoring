@@ -23,6 +23,12 @@ void reconnect(int sig)
 	writelog(logfd, ERROR, "서버와의 연결이 끊어졌습니다.");
 	writelog(logfd, DEBUG, "재접속 시도 중...");
 	flag = 0;
+	pthread_join(collect_thread[0], 0);
+	pthread_join(collect_thread[1], 0);
+	pthread_join(collect_thread[2], 0);
+	pthread_join(collect_thread[3], 0);
+	pthread_join(collect_thread[4], 0);
+	close(my_sock);
 	my_sock = socket(PF_INET,SOCK_STREAM,IPPROTO_TCP);
 	while (connect(my_sock,(struct sockaddr*)&serv_addr,sizeof(serv_addr)) == -1)
 	{
@@ -63,16 +69,33 @@ void *connect_socket(void *packe)
 	}
 	writelog(logfd, DEBUG, "연결 성공");
 	procinfo *pinfo;
-	p_head *header = malloc(sizeof(struct s_packethead));
 	plist *list;
+	diskinfo *dinfo;
+	disklist *dlist;
+	p_head *header = malloc(sizeof(struct s_packethead));
+	int cpu_flag = 0;
+	int mem_flag = 0;
+	float cpu_usage;
+	float mem_usage; 
+	
 	while(1)
 	{
-
 		if (packet->cpuqueue->next)
 		{
 			header->type = 'c';
 			header->size = sizeof(p_head) + sizeof(cpuinfo);
 			cpuinfo *tmp = cpu_pop(packet);
+			if (cpu_flag == 0)
+			{
+				cpu_usage = (tmp->cpu_usr / (tmp->cpu_usr + tmp->cpu_sys + tmp->cpu_iowait + tmp->cpu_idle));
+				tmp->delta_usage = cpu_usage + 1;
+				cpu_flag = 1;
+			}
+			else
+			{
+				tmp->delta_usage = (tmp->cpu_usr / (tmp->cpu_usr + tmp->cpu_sys + tmp->cpu_iowait + tmp->cpu_idle)) - cpu_usage;
+				cpu_usage = (tmp->cpu_usr / (tmp->cpu_usr + tmp->cpu_sys + tmp->cpu_iowait + tmp->cpu_idle));
+			}
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(cpuinfo));
 			// printf("send cpu\n");
 			snd(message, sizeof(p_head) + sizeof(cpuinfo));
@@ -84,6 +107,17 @@ void *connect_socket(void *packe)
 			header->type = 'm';
 			header->size = sizeof(p_head) + sizeof(meminfo);
 			meminfo *tmp = mem_pop(packet);
+			if (mem_flag == 0)
+			{
+				mem_usage = tmp->mem_used / tmp->mem_total;
+				tmp->delta_usage = mem_usage + 1;
+				mem_flag = 1;
+			}
+			else
+			{
+				tmp->delta_usage = (tmp->mem_used / tmp->mem_total) - mem_usage;
+				mem_usage = tmp->mem_used / tmp->mem_total;
+			}
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(meminfo));
 			// printf("send mem\n");
 			snd(message, sizeof(p_head) + sizeof(meminfo));
@@ -106,7 +140,6 @@ void *connect_socket(void *packe)
 		if (packet->plistqueue->next)
 		{
 			header->type = 'p';
-			header->size = sizeof(p_head) + sizeof(plist);
 			list = plist_pop(packet);
 			int size = 0;
 			char *tmp = NULL;
@@ -130,10 +163,10 @@ void *connect_socket(void *packe)
 				free_s(pinfo);
 				i++;
 			}
-			header->size = size + sizeof(plist);
+			header->size = sizeof(p_head) + sizeof(plist) + size;
 			tmp = make_packet(header, sizeof(p_head), list, sizeof(plist));
 			char *real = make_packet(tmp, sizeof(p_head)+sizeof(plist), message, size);
-			snd(real, sizeof(p_head)+sizeof(plist)+size);
+			snd(real, header->size);
 			free_s(message);
 			free_s(list->HEAD);
 			free_s(list);
@@ -142,6 +175,36 @@ void *connect_socket(void *packe)
 			// break ;
 		}
 
+		if (packet->diskqueue->next)
+		{
+			header->type = 'd';
+			dlist = disklist_pop(packet);
+			int size = 0;
+			char *tmp = NULL;
+			char *message = NULL;
+			int i = 0;
+			while ((dinfo = disk_pop(dlist)) != 0)
+			{
+				if (!dinfo)
+					break;
+				tmp = make_packet(message, size, dinfo, sizeof(diskinfo));
+				free_s(message);
+				message = tmp;
+				size += sizeof(diskinfo);
+				free_s(dinfo);
+				i++;
+			}
+			header->size = sizeof(p_head) + sizeof(disklist) + size;
+			tmp = make_packet(header, sizeof(p_head), dlist, sizeof(disklist));
+			char *real = make_packet(tmp, sizeof(p_head)+sizeof(disklist), message, size);
+			snd(real, header->size);
+			free_s(message);
+			free_s(dlist->HEAD);
+			free_s(dlist);
+			free_s(tmp);
+			free_s(real);
+			// break ;
+		}
 	}
 	free_s(header);
 	writelog(logfd, DEBUG, "전송 완료");

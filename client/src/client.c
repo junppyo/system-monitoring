@@ -16,6 +16,8 @@ packet *init(void)
 	queue->netqueue->next = NULL;
 	queue->matricqueue = malloc(sizeof(udpmatric));
 	queue->matricqueue->next = NULL;
+	queue->diskqueue = malloc(sizeof(diskinfo));
+	queue->diskqueue->next = NULL;
 
 	FILE *config = fopen("client.config", "r");
 	if (!config)
@@ -56,6 +58,11 @@ packet *init(void)
 		tmp = strtok(buf, "=");
 		tmp = strtok(NULL, "=");
 		PROC_CYCLE = atof(tmp) * 1000000;
+
+		fgets(buf, sizeof(buf), config);
+		tmp = strtok(buf, "=");
+		tmp = strtok(NULL, "=");
+		DISK_CYCLE = atof(tmp) * 1000000;
 	}
 	
 	return (queue);
@@ -101,10 +108,16 @@ int main()
 	free_s(queue->memqueue);
 	free_s(queue->netqueue);
 	free_s(queue->plistqueue);
+	free_s(queue->udpqueue);
+	free_s(queue->matricqueue);
+	free_s(queue->diskqueue);
 	pthread_mutex_destroy(&queue->cpu_mutex);
 	pthread_mutex_destroy(&queue->mem_mutex);
 	pthread_mutex_destroy(&queue->net_mutex);
 	pthread_mutex_destroy(&queue->plist_mutex);
+	pthread_mutex_destroy(&queue->udp_mutex);
+	pthread_mutex_destroy(&queue->matric_mutex);
+	pthread_mutex_destroy(&queue->disk_mutex);
 	free_s(queue);
 	fclose(logfd);
 	return 0;

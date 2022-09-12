@@ -3,6 +3,11 @@
 MYSQL *conn;
 FILE *logfd;
 
+void print_delta(char c, float n)
+{
+
+}
+
 int connect_db(void)
 {
 	conn = mysql_init(NULL);
@@ -18,7 +23,23 @@ void send_query(char *s)
 	// MYSQL_ROW row;
 	write(1, s, ft_strlen(s));
 	write(1, "\n", 1);
-//	mysql_query(conn, s);
+	// mysql_query(conn, s);
+}
+
+void chk_data(cpuinfo *info)
+{
+	MYSQL_RES *res;
+	MYSQL_ROW row;
+	if (info->cpu_usr >= 70000)
+	{
+		mysql_query(conn, "select idx from cpuinfo order by idx desc limit 1;");
+		res = mysql_use_result(conn);
+		row = mysql_fetch_row(res);
+		FILE *fp = fopen("specialcase", "a");
+		fprintf(fp, "%s\n", row[0]);
+		writelog(logfd, TRACE, "Saved Special Case");
+		mysql_free_result(res);
+	}
 }
 
 
@@ -40,13 +61,17 @@ void *saver(void *queu)
 		if (queue->cpuqueue->next)
 		{
 			cpuinfo *tmp = cpu_pop(queue);
+			print_delta('c', tmp->delta_usage);
 			sprintf(buf, "INSERT INTO cpuinfo (id, usr, sys, iowait, idle) VALUES (%d, %lu, %lu, %lu, %lu);", tmp->id, tmp->cpu_usr, tmp->cpu_sys, tmp->cpu_iowait, tmp->cpu_idle);
+			// sprintf(buf, "INSERT INTO cpuinfo (id, usr, sys, iowait, idle) VALUES (%d, %lu, %lu, %lu, %lu);", tmp->id, (unsigned long)80000, tmp->cpu_sys, tmp->cpu_iowait, tmp->cpu_idle);
 			send_query(buf);
+			chk_data(tmp);
 			free_s(tmp);
 		}
 		if (queue->memqueue->next)
 		{
 			meminfo *tmp = mem_pop(queue);
+			print_delta('m', tmp->delta_usage);
 			sprintf(buf, "INSERT INTO meminfo (id, free, total, used, swap) VALUES (%d, %lu, %lu, %lu, %lu);", tmp->id, tmp->mem_free, tmp->mem_total, tmp->mem_used, tmp->mem_swap);
 			send_query(buf);
 			free_s(tmp);
@@ -84,6 +109,20 @@ void *saver(void *queu)
 			}
 			send_query(s);
 			free_s(s);
+			free_s(tmp);
+		}
+		if (queue->diskqueue->next)
+		{
+			disklist *tmp = disklist_pop(queue);
+			char *s = NULL;
+			char *tmp2;
+			diskinfo *dinfo;
+			while ((dinfo = disk_pop(tmp)) != NULL)
+			{
+				sprintf(buf, "INSERT INTO diskinfo (id, name, type, total, used, available, mounted) VALUES (%d, %s, %s, %lu, %lu, %lu, %s)", dinfo->id, dinfo->name, dinfo->type, dinfo->total, dinfo->used, dinfo->available, dinfo->mounted);
+				send_query(buf);
+				free_s(dinfo);
+			}
 			free_s(tmp);
 		}
 		if (queue->udpqueue->next)

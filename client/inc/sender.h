@@ -15,6 +15,7 @@
 extern int my_sock;
 extern struct sockaddr_in serv_addr;
 extern int flag;
+extern pthread_t collect_thread[5];
 
 void snd(void *message, int size);
 void *connect_socket(void *packe);

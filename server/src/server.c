@@ -21,6 +21,8 @@ packet *queue_init()
 	queue->netqueue->next = NULL;
 	queue->plistqueue = malloc(sizeof(plist));
 	queue->plistqueue->next = NULL;
+	queue->diskqueue = malloc(sizeof(disklist));
+	queue->diskqueue->next = NULL;
 	queue->udpqueue = malloc(sizeof(udppacket));
 	queue->udpqueue->next = NULL;
 	queue->matricqueue = malloc(sizeof(udpmatric));

@@ -8,6 +8,8 @@
 
 int my_sock;
 struct sockaddr_in serv_addr;
+
+pthread_t collect_thread[5];
 FILE *logfd;
 unsigned int CPU_CYCLE;
 unsigned int MEM_CYCLE;

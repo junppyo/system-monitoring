@@ -56,11 +56,26 @@ void *proc_collect(void *packe)
 	return 0;
 }
 
+void *disk_collect(void *packe)
+{
+	writelog(logfd, DEBUG, "disk collector is start");
+	packet *packet = (struct s_packet*) packe;
+	while (flag)
+	{
+		read_disk(packet);
+		writelog(logfd, TRACE, "collected disk info");
+		usleep(PROC_CYCLE);
+	}
+	writelog(logfd, DEBUG, "disk collector is stopped");
+	return (0);
+}
+
+
 void collect(packet *queue)
 {
-	pthread_t thread[4];
-	pthread_create(&thread[0], NULL, cpu_collect, (void *)queue);
-	pthread_create(&thread[1], NULL, mem_collect, (void *)queue);
-	pthread_create(&thread[2], NULL, net_collect, (void *)queue);
-	pthread_create(&thread[3], NULL, proc_collect, (void *)queue);
+	pthread_create(&collect_thread[0], NULL, cpu_collect, (void *)queue);
+	pthread_create(&collect_thread[1], NULL, mem_collect, (void *)queue);
+	pthread_create(&collect_thread[2], NULL, net_collect, (void *)queue);
+	pthread_create(&collect_thread[3], NULL, proc_collect, (void *)queue);
+	pthread_create(&collect_thread[4], NULL, disk_collect, (void *)queue);
 }
