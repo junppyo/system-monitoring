@@ -14,8 +14,10 @@ void snd(void *message, int size)
 		return ;
 	}
 	itoa(ret, s);
-	// printf("%d send\n", ret);
-	writelog(logfd, TRACE, ft_strjoin(s, "byte send"));
+	printf("%d send\n", ret);
+	char *logmessage = ft_strjoin(s, "byte send");
+	writelog(logfd, TRACE, logmessage);
+	free_s(logmessage);
 }
 
 void reconnect(int sig)
@@ -73,11 +75,12 @@ void *connect_socket(void *packe)
 	diskinfo *dinfo;
 	disklist *dlist;
 	p_head *header = malloc(sizeof(struct s_packethead));
-	int cpu_flag = 0;
-	int mem_flag = 0;
 	float cpu_usage;
-	float mem_usage; 
-	
+	float mem_usage;
+	struct s_tmpqueue *tmpqueue = tmpqueue_init();
+	time_t nowtime = time(NULL);
+	time_t tmptime = time(NULL);
+
 	while(1)
 	{
 		if (packet->cpuqueue->next)
@@ -85,17 +88,9 @@ void *connect_socket(void *packe)
 			header->type = 'c';
 			header->size = sizeof(p_head) + sizeof(cpuinfo);
 			cpuinfo *tmp = cpu_pop(packet);
-			if (cpu_flag == 0)
-			{
-				cpu_usage = (tmp->cpu_usr / (tmp->cpu_usr + tmp->cpu_sys + tmp->cpu_iowait + tmp->cpu_idle));
-				tmp->delta_usage = cpu_usage + 1;
-				cpu_flag = 1;
-			}
-			else
-			{
-				tmp->delta_usage = (tmp->cpu_usr / (tmp->cpu_usr + tmp->cpu_sys + tmp->cpu_iowait + tmp->cpu_idle)) - cpu_usage;
-				cpu_usage = (tmp->cpu_usr / (tmp->cpu_usr + tmp->cpu_sys + tmp->cpu_iowait + tmp->cpu_idle));
-			}
+			cpu_usage = ((float)tmp->cpu_usr / (float)(tmp->cpu_usr + tmp->cpu_sys + tmp->cpu_iowait + tmp->cpu_idle));
+			printf("cpuusage: %f\n", cpu_usage);
+			tmp->delta_usage = cpuusage_append(tmpqueue, cpu_usage);
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(cpuinfo));
 			// printf("send cpu\n");
 			snd(message, sizeof(p_head) + sizeof(cpuinfo));
@@ -107,17 +102,9 @@ void *connect_socket(void *packe)
 			header->type = 'm';
 			header->size = sizeof(p_head) + sizeof(meminfo);
 			meminfo *tmp = mem_pop(packet);
-			if (mem_flag == 0)
-			{
-				mem_usage = tmp->mem_used / tmp->mem_total;
-				tmp->delta_usage = mem_usage + 1;
-				mem_flag = 1;
-			}
-			else
-			{
-				tmp->delta_usage = (tmp->mem_used / tmp->mem_total) - mem_usage;
-				mem_usage = tmp->mem_used / tmp->mem_total;
-			}
+			mem_usage = (float)tmp->mem_used / (float)tmp->mem_total;
+			printf("memusage: %f\n", mem_usage);
+			tmp->delta_usage = memusage_append(tmpqueue, mem_usage);
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(meminfo));
 			// printf("send mem\n");
 			snd(message, sizeof(p_head) + sizeof(meminfo));
@@ -137,43 +124,43 @@ void *connect_socket(void *packe)
 			// break;
 		}
 
-		if (packet->plistqueue->next)
-		{
-			header->type = 'p';
-			list = plist_pop(packet);
-			int size = 0;
-			char *tmp = NULL;
-			char *message = NULL;
-			int i = 0;		
-			while ((pinfo = pop(list)) != 0)
-			{
-				// printf("pid: %d cmdline_lne: %d cmdline: %s ft_strlen: %d\n", pinfo->pid, pinfo->cmdline_len, pinfo->cmdline, ft_strlen(pinfo->cmdline));
-				tmp = make_packet(message, size, pinfo, sizeof(procinfo));
-				free_s(message);
-				message = tmp;
-				size += sizeof(procinfo);
-				if (pinfo->cmdline_len)
-				{
-					tmp = make_packet(message, size, pinfo->cmdline, pinfo->cmdline_len);
-					size += pinfo->cmdline_len;
-					free_s(message);
-					message = tmp;
-					free_s(pinfo->cmdline);
-				}
-				free_s(pinfo);
-				i++;
-			}
-			header->size = sizeof(p_head) + sizeof(plist) + size;
-			tmp = make_packet(header, sizeof(p_head), list, sizeof(plist));
-			char *real = make_packet(tmp, sizeof(p_head)+sizeof(plist), message, size);
-			snd(real, header->size);
-			free_s(message);
-			free_s(list->HEAD);
-			free_s(list);
-			free_s(tmp);
-			free_s(real);
-			// break ;
-		}
+		// if (packet->plistqueue->next)
+		// {
+		// 	header->type = 'p';
+		// 	list = plist_pop(packet);
+		// 	int size = 0;
+		// 	char *tmp = NULL;
+		// 	char *message = NULL;
+		// 	int i = 0;		
+		// 	while ((pinfo = pop(list)) != 0)
+		// 	{
+		// 		// printf("pid: %d cmdline_lne: %d cmdline: %s ft_strlen: %d\n", pinfo->pid, pinfo->cmdline_len, pinfo->cmdline, ft_strlen(pinfo->cmdline));
+		// 		tmp = make_packet(message, size, pinfo, sizeof(procinfo));
+		// 		free_s(message);
+		// 		message = tmp;
+		// 		size += sizeof(procinfo);
+		// 		if (pinfo->cmdline_len)
+		// 		{
+		// 			tmp = make_packet(message, size, pinfo->cmdline, pinfo->cmdline_len);
+		// 			size += pinfo->cmdline_len;
+		// 			free_s(message);
+		// 			message = tmp;
+		// 			free_s(pinfo->cmdline);
+		// 		}
+		// 		free_s(pinfo);
+		// 		i++;
+		// 	}
+		// 	header->size = sizeof(p_head) + sizeof(plist) + size;
+		// 	tmp = make_packet(header, sizeof(p_head), list, sizeof(plist));
+		// 	char *real = make_packet(tmp, sizeof(p_head)+sizeof(plist), message, size);
+		// 	snd(real, header->size);
+		// 	free_s(message);
+		// 	free_s(list->HEAD);
+		// 	free_s(list);
+		// 	free_s(tmp);
+		// 	free_s(real);
+		// 	// break ;
+		// }
 
 		if (packet->diskqueue->next)
 		{
@@ -196,19 +183,41 @@ void *connect_socket(void *packe)
 			}
 			header->size = sizeof(p_head) + sizeof(disklist) + size;
 			tmp = make_packet(header, sizeof(p_head), dlist, sizeof(disklist));
-			char *real = make_packet(tmp, sizeof(p_head)+sizeof(disklist), message, size);
-			snd(real, header->size);
+			char *sndmessage = make_packet(tmp, sizeof(p_head)+sizeof(disklist), message, size);
+			snd(sndmessage, header->size);
 			free_s(message);
 			free_s(dlist->HEAD);
 			free_s(dlist);
 			free_s(tmp);
-			free_s(real);
+			free_s(sndmessage);
 			// break ;
+		}
+
+		if (tmptime < time(NULL) - 3)
+		{
+			while (tmpqueue->cpuTAIL->prev != tmpqueue->cpuHEAD->next && tmpqueue->cpuTAIL->prev->collect_time < time(NULL) - 3600)
+				cpuusage_pop(tmpqueue);
+			while (tmpqueue->memTAIL->prev != tmpqueue->memHEAD->next && tmpqueue->memTAIL->prev->collect_time < time(NULL) - 3600)
+				memusage_pop(tmpqueue);
+			header->type = 'a';
+			header->size = sizeof(p_head) + (sizeof(float) * 2);
+			float cpuusage_avg = (float)tmpqueue->cputotal / (float)tmpqueue->cpulen;
+			float memusage_avg = (float)tmpqueue->memtotal / (float)tmpqueue->memlen;
+			printf("cputotal: %f cpulen: %d\n", tmpqueue->cputotal, tmpqueue->cpulen);
+			printf("memtotal: %f memlen: %d\n", tmpqueue->memtotal, tmpqueue->memlen);
+			printf("cpuavg: %f  memavg: %f\n", cpuusage_avg, memusage_avg);
+			char *tmp = make_packet(header, sizeof(p_head), &cpuusage_avg, sizeof(float));
+			char *message = make_packet(tmp, sizeof(p_head) + sizeof(float), &memusage_avg, sizeof(float));
+			snd(message, header->size);
+			tmptime = time(NULL);
+			free_s(tmp);
+			free_s(message);
+			// break;
+	
 		}
 	}
 	free_s(header);
-	writelog(logfd, DEBUG, "전송 완료");
-
 	close(my_sock);
+	writelog(logfd, DEBUG, "전송 완료");
 	return 0;
 }

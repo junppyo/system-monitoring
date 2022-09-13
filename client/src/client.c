@@ -82,6 +82,7 @@ int main()
 	static struct sigaction	act;
 	act.sa_handler = quit;
 	sigaction(SIGINT, &act, NULL);
+	// sigaction(SIGSEGV, &act, NULL);
 	
 	// daemon_init();
 	packet *queue = init();
@@ -93,7 +94,6 @@ int main()
 	writelog(logfd, DEBUG, s);
 	collect(queue);
 	pthread_create(&thread, NULL, connect_socket,(void*)queue);
-	// connect_socket(queue);
 	
 	while (1)
 	{
@@ -103,6 +103,7 @@ int main()
 			flag = 1;
 		}
 	}
+
 	
 	free_s(queue->cpuqueue);
 	free_s(queue->memqueue);
@@ -120,5 +121,7 @@ int main()
 	pthread_mutex_destroy(&queue->disk_mutex);
 	free_s(queue);
 	fclose(logfd);
+	writelog(logfd, DEBUG, "exit");
+	
 	return 0;
 }

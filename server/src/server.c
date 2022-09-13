@@ -42,10 +42,46 @@ void queue_free(packet *queue)
 	pthread_mutex_destroy(&queue->mem_mutex);
 	pthread_mutex_destroy(&queue->net_mutex);
 	pthread_mutex_destroy(&queue->plist_mutex);
+	pthread_mutex_destroy(&queue->udp_mutex);
+	pthread_mutex_destroy(&queue->matric_mutex);
+	pthread_mutex_destroy(&queue->disk_mutex);
+	while (queue->cpuqueue->next)
+	{
+		cpuinfo *tmp = cpu_pop(queue);
+		free_s(tmp);
+	}
+	while (queue->memqueue->next)
+	{
+		meminfo *tmp = mem_pop(queue);
+		free_s(tmp);
+	}
+	while (queue->netqueue->next)
+	{
+		netinfo *tmp = net_pop(queue);
+		free_s(tmp);
+	}
+	while (queue->plistqueue->next)
+	{
+		plist *tmp = plist_pop(queue);
+		free_s(tmp);
+	}
+	while (queue->udpqueue->next)
+	{
+		udppacket *tmp = udp_pop(queue);
+		free_s(tmp);
+	}
+	while (queue->matricqueue->next)
+	{
+		udpmatric *tmp = matric_pop(queue);
+		free_s(tmp);
+	}
 	free_s(queue->cpuqueue);
 	free_s(queue->memqueue);
 	free_s(queue->netqueue);
 	free_s(queue->plistqueue);
+	free_s(queue->udpqueue);
+	free_s(queue->matricqueue);
+	free_s(queue->diskqueue);
 
 	free_s(queue);
 }
@@ -61,20 +97,16 @@ int main()
 	pthread_t thread[3];
 
 	packet *queue = queue_init();
-	
 	logfd = fopen("server_log", "a");
 	pthread_create(&thread[0], NULL, saver, (void *)queue);
 	pthread_create(&thread[1], NULL, tcp_open, queue);
 	pthread_create(&thread[2], NULL, udp_open, queue);
 
-	while (1)
-	{
-	}
-	// pthread_join(thread[0], NULL);
-	// pthread_join(thread[1], NULL);
+	pthread_join(thread[0], NULL);
+	pthread_join(thread[1], NULL);
 	
-	queue_free(queue);
-
 	fclose(logfd);
+	queue_free(queue);
+	
 	return 0;
 }

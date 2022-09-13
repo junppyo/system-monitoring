@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <time.h>
 
 typedef struct s_cpuinfo
 {
@@ -155,6 +156,45 @@ typedef struct s_packet
 	pthread_mutex_t matric_mutex;
 	pthread_mutex_t disk_mutex;
 } packet;
+
+struct s_cpuusage
+{
+	float usage;
+	time_t collect_time;
+	struct s_cpuusage *prev;
+	struct s_cpuusage *next;
+};
+
+struct s_memusage
+{
+	float usage;
+	time_t collect_time;
+	struct s_memusage *prev;
+	struct s_memusage *next;
+};
+
+struct s_tmpqueue
+{
+	struct s_cpuusage *cpuHEAD;
+	struct s_cpuusage *cpuTAIL;
+	struct s_memusage *memHEAD;
+	struct s_memusage *memTAIL;
+
+	pthread_mutex_t cpuusage_mutex;
+	pthread_mutex_t memusage_mutex;
+
+	int cpulen;
+	int memlen;
+	float cputotal;
+	float memtotal;
+};
+
+struct s_tmpqueue *tmpqueue_init();
+float cpuusage_append(struct s_tmpqueue *queue, float usage);
+float memusage_append(struct s_tmpqueue *queue, float usage);
+void cpuusage_pop(struct s_tmpqueue *queue);
+void memusage_pop(struct s_tmpqueue *queue);
+
 
 void cpu_append(packet *packet, cpuinfo *node);
 cpuinfo *cpu_pop(packet *packet);

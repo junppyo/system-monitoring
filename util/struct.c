@@ -269,3 +269,121 @@ disklist *disklist_pop(packet *packet)
 	pthread_mutex_unlock(&packet->disk_mutex);
 	return ret;
 }
+
+struct s_tmpqueue *tmpqueue_init()
+{
+	struct s_tmpqueue *queue;
+
+	queue->cpuHEAD = malloc(sizeof(struct s_cpuusage));
+	queue->cpuTAIL = malloc(sizeof(struct s_cpuusage));
+	queue->memHEAD = malloc(sizeof(struct s_memusage));
+	queue->memTAIL = malloc(sizeof(struct s_memusage));
+
+	queue->cpuHEAD->prev = NULL;
+	queue->cpuHEAD->next = queue->cpuTAIL;
+	queue->cpuTAIL->prev = queue->cpuHEAD;
+	queue->cpuTAIL->next = NULL;
+
+	queue->memHEAD->prev = NULL;
+	queue->memHEAD->next = queue->memTAIL;
+	queue->memTAIL->prev = queue->memHEAD;
+	queue->memTAIL->next = NULL;
+
+	queue->cpulen = 0;
+	queue->memlen = 0;
+	queue->cputotal = 0;
+	queue->memtotal = 0;
+
+	// pthread_mutex_unlock(&queue->cpuusage_mutex);
+	// pthread_mutex_unlock(&queue->memusage_mutex);
+
+	return queue;
+}
+
+float cpuusage_append(struct s_tmpqueue *queue, float usage)
+{
+	// pthread_mutex_lock(&queue->cpuusage_mutex);
+	struct s_cpuusage *node = malloc(sizeof(struct s_cpuusage));
+	node->usage = usage;
+	node->collect_time = time(NULL);
+	node->prev = queue->cpuHEAD;
+	node->next = queue->cpuHEAD->next;
+	queue->cpuHEAD->next = node;
+	queue->cpulen++;
+	queue->cputotal += usage;
+	if (queue->cpuTAIL->prev == queue->cpuHEAD)
+	{
+		queue->cpuTAIL->prev = node;
+		// pthread_mutex_unlock(&queue->cpuusage_mutex);
+		return usage;
+	}
+	else
+	{
+		// pthread_mutex_unlock(&queue->cpuusage_mutex);
+		return queue->cpuTAIL->prev->usage - usage;
+	}
+}
+
+float memusage_append(struct s_tmpqueue *queue, float usage)
+{
+	// pthread_mutex_lock(&queue->memusage_mutex);
+	struct s_memusage *node = malloc(sizeof(struct s_memusage));
+	node->usage = usage;
+	node->collect_time = time(NULL);
+	node->prev = queue->memHEAD;
+	node->next = queue->memHEAD->next;
+	queue->memHEAD->next = node;
+	queue->memlen++;
+	queue->memtotal += usage;
+	if (queue->memTAIL->prev == queue->memHEAD)
+	{
+		queue->memTAIL->prev = node;
+		// pthread_mutex_unlock(&queue->memusage_mutex);
+		return usage;
+	}
+	else
+	{
+		// pthread_mutex_unlock(&queue->memusage_mutex);
+		return queue->memTAIL->prev->usage - usage;
+	}
+}
+
+// struct s_cpuusage *
+void cpuusage_pop(struct s_tmpqueue *queue)
+{
+	// pthread_mutex_lock(&queue->cpuusage_mutex);
+	if (queue->cpuHEAD->next == queue->cpuTAIL)
+		return ;
+	struct s_cpuusage *ret = queue->cpuTAIL->prev;
+
+	queue->cpulen--;
+	queue->cputotal -= ret->usage;
+	queue->cpuTAIL->prev->prev->next = queue->cpuTAIL;
+	queue->cpuTAIL->prev = queue->cpuTAIL->prev->prev;
+	// pthread_mutex_unlock(&queue->cpuusage_mutex);
+	// free(ret);
+	// if (ret == queue->cpuHEAD)
+	// 	return NULL;
+	// else
+	// 	return ret;
+}
+
+// struct s_memusage *
+void memusage_pop(struct s_tmpqueue *queue)
+{
+	// pthread_mutex_lock(&queue->memusage_mutex);
+	if (queue->memHEAD->next == queue->memTAIL)
+		return ;
+	struct s_memusage *ret = queue->memTAIL->prev;
+
+	queue->memlen--;
+	queue->memtotal -= ret->usage;
+	queue->memTAIL->prev->prev->next = queue->memTAIL;
+	queue->memTAIL->prev = queue->memTAIL->prev->prev;
+	// pthread_mutex_unlock(&queue->memusage_mutex);
+	// free(ret);
+	// if (ret == queue->memHEAD)
+	// 	return NULL;
+	// else
+	// 	return ret;
+}

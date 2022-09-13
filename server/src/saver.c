@@ -21,8 +21,8 @@ void send_query(char *s)
 {
 	// MYSQL_RES *res;
 	// MYSQL_ROW row;
-	write(1, s, ft_strlen(s));
-	write(1, "\n", 1);
+	// write(1, s, ft_strlen(s));
+	// write(1, "\n", 1);
 	// mysql_query(conn, s);
 }
 
@@ -140,6 +140,7 @@ void *saver(void *queu)
 			free_s(tmp);
 		}
 	}
+	mysql_close(conn);
 	return 0;
 
 }

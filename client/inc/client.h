@@ -15,6 +15,7 @@ unsigned int CPU_CYCLE;
 unsigned int MEM_CYCLE;
 unsigned int NET_CYCLE;
 unsigned int PROC_CYCLE;
+unsigned int DISK_CYCLE;
 int clientid;
 int flag;
 
