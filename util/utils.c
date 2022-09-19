@@ -251,7 +251,13 @@ unsigned long getTime()
 
 void writelog(FILE *fd, int type, char *message)
 {
-
+	static int logflag;
+	if (logflag == 0)
+	{
+		pthread_mutex_init(&logmutex, NULL);
+		logflag = 1;
+	}
+	pthread_mutex_lock(&logmutex);
 	if (type == TRACE)
 		fprintf(fd, "%lu trace: %s\n", getTime(), message);
 	else if (type == DEBUG)
@@ -260,6 +266,7 @@ void writelog(FILE *fd, int type, char *message)
 		fprintf(fd, "%lu info: %s\n", getTime(), message);
 	else if (type == ERROR)
 		fprintf(fd, "%lu error: %s\n", getTime(), message);
+	pthread_mutex_unlock(&logmutex);
 }
 
 void free_s(void *a)

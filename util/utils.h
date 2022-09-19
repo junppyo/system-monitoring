@@ -10,6 +10,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <pthread.h>
 
 #define TRACE 0
 #define DEBUG 1
@@ -28,5 +29,7 @@ void itoa(int n, char *s);
 void free_s(void *a);
 char *make_packet(void *s1, int size1, void *s2, int size2);
 int daemon_init(void);
+
+extern pthread_mutex_t logmutex;
 
 #endif

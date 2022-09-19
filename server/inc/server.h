@@ -16,6 +16,7 @@
 
 
 extern FILE *logfd;
+pthread_mutex_t logmutex;
 
 
 #endif

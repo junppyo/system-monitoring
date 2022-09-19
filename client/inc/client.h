@@ -18,5 +18,7 @@ unsigned int PROC_CYCLE;
 unsigned int DISK_CYCLE;
 int clientid;
 int flag;
+pthread_mutex_t logmutex;
+
 
 #endif

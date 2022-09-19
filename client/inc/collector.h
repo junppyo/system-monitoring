@@ -22,5 +22,6 @@ void collect(packet *queue);
 extern int flag;
 
 extern pthread_t collect_thread[5];
+extern pthread_mutex_t logmutex;
 
 #endif
