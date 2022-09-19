@@ -310,6 +310,7 @@ float cpuusage_append(struct s_tmpqueue *queue, float usage)
 	node->collect_time = time(NULL);
 	node->prev = queue->cpuHEAD;
 	node->next = queue->cpuHEAD->next;
+	queue->cpuHEAD->next->prev = node;
 	queue->cpuHEAD->next = node;
 	queue->cpulen++;
 	queue->cputotal += usage;
@@ -334,6 +335,7 @@ float memusage_append(struct s_tmpqueue *queue, float usage)
 	node->collect_time = time(NULL);
 	node->prev = queue->memHEAD;
 	node->next = queue->memHEAD->next;
+	queue->memHEAD->next->prev = node;
 	queue->memHEAD->next = node;
 	queue->memlen++;
 	queue->memtotal += usage;
@@ -362,6 +364,7 @@ void cpuusage_pop(struct s_tmpqueue *queue)
 	queue->cputotal -= ret->usage;
 	queue->cpuTAIL->prev->prev->next = queue->cpuTAIL;
 	queue->cpuTAIL->prev = queue->cpuTAIL->prev->prev;
+	free(ret);
 	pthread_mutex_unlock(&queue->cpuusage_mutex);
 	// free(ret);
 	// if (ret == queue->cpuHEAD)
@@ -385,6 +388,7 @@ void memusage_pop(struct s_tmpqueue *queue)
 	queue->memtotal -= ret->usage;
 	queue->memTAIL->prev->prev->next = queue->memTAIL;
 	queue->memTAIL->prev = queue->memTAIL->prev->prev;
+	free(ret);
 	pthread_mutex_unlock(&queue->memusage_mutex);
 	// free(ret);
 	// if (ret == queue->memHEAD)

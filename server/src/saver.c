@@ -63,7 +63,7 @@ void *saver(void *queu)
 		{
 			cpuinfo *tmp = cpu_pop(queue);
 			print_delta('c', tmp->delta_usage);
-			sprintf(buf, "INSERT INTO cpuinfo (id, usr, sys, iowait, idle) VALUES (%d, %lu, %lu, %lu, %lu);", tmp->id, tmp->cpu_usr, tmp->cpu_sys, tmp->cpu_iowait, tmp->cpu_idle);
+			sprintf(buf, "INSERT INTO cpuinfo (id, usr, sys, iowait, idle, deltausage) VALUES (%d, %lu, %lu, %lu, %lu, %f);", tmp->id, tmp->cpu_usr, tmp->cpu_sys, tmp->cpu_iowait, tmp->cpu_idle, tmp->delta_usage);
 			// sprintf(buf, "INSERT INTO cpuinfo (id, usr, sys, iowait, idle) VALUES (%d, %lu, %lu, %lu, %lu);", tmp->id, (unsigned long)111000, tmp->cpu_sys, tmp->cpu_iowait, tmp->cpu_idle);
 			send_query(buf);
 			chk_data(tmp);
@@ -72,8 +72,8 @@ void *saver(void *queu)
 		if (queue->memqueue->next)
 		{
 			meminfo *tmp = mem_pop(queue);
-			print_delta('m', tmp->delta_usage);
-			sprintf(buf, "INSERT INTO meminfo (id, free, total, used, swap) VALUES (%d, %lu, %lu, %lu, %lu);", tmp->id, tmp->mem_free, tmp->mem_total, tmp->mem_used, tmp->mem_swap);
+			// print_delta('m', tmp->delta_usage);
+			sprintf(buf, "INSERT INTO meminfo (id, free, total, used, swap, deltausage) VALUES (%d, %lu, %lu, %lu, %lu, %f);", tmp->id, tmp->mem_free, tmp->mem_total, tmp->mem_used, tmp->mem_swap, tmp->delta_usage);
 			send_query(buf);
 			free_s(tmp);
 		}

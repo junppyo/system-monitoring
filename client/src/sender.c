@@ -90,6 +90,7 @@ void *connect_socket(void *packe)
 			cpuinfo *tmp = cpu_pop(packet);
 			cpu_usage = ((float)tmp->cpu_usr / (float)(tmp->cpu_usr + tmp->cpu_sys + tmp->cpu_iowait + tmp->cpu_idle));
 			tmp->delta_usage = cpuusage_append(tmpqueue, cpu_usage);
+			printf("cpu delta: %f\n", tmp->delta_usage);
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(cpuinfo));
 			// printf("send cpu\n");
 			snd(message, sizeof(p_head) + sizeof(cpuinfo));
@@ -103,6 +104,7 @@ void *connect_socket(void *packe)
 			meminfo *tmp = mem_pop(packet);
 			mem_usage = (float)tmp->mem_used / (float)tmp->mem_total;
 			tmp->delta_usage = memusage_append(tmpqueue, mem_usage);
+			printf("mem delta: %f\n", tmp->delta_usage);
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(meminfo));
 			// printf("send mem\n");
 			snd(message, sizeof(p_head) + sizeof(meminfo));
@@ -134,15 +136,12 @@ void *connect_socket(void *packe)
 			size += sizeof(p_head) + sizeof(plist);
 			while ((pinfo = pop(list)) != 0)
 			{
-				// printf("pid: %d cmdline_lne: %d cmdline: %s ft_strlen: %d\n", pinfo->pid, pinfo->cmdline_len, pinfo->cmdline, ft_strlen(pinfo->cmdline));
 				tmp = make_packet(message, size, pinfo, sizeof(procinfo));
 				free_s(message);
 				message = tmp;
 				size += sizeof(procinfo);
-				// printf("%d %s %d\n", pinfo->pid, pinfo->name, pinfo->cmdline_len);
 				if (pinfo->cmdline_len)
 				{
-					// printf("%s\n", pinfo->cmdline);
 					tmp = make_packet(message, size, pinfo->cmdline, pinfo->cmdline_len);
 					size += pinfo->cmdline_len;
 					free_s(message);
@@ -206,9 +205,9 @@ void *connect_socket(void *packe)
 
 		if (tmptime < time(NULL) - 3)
 		{
-			while (tmpqueue->cpuTAIL->prev != tmpqueue->cpuHEAD->next && tmpqueue->cpuTAIL->prev->collect_time < time(NULL) - 3600)
+			while (tmpqueue->cpuTAIL->prev != tmpqueue->cpuHEAD->next && tmpqueue->cpuTAIL->prev->collect_time < time(NULL) - 3)
 				cpuusage_pop(tmpqueue);
-			while (tmpqueue->memTAIL->prev != tmpqueue->memHEAD->next && tmpqueue->memTAIL->prev->collect_time < time(NULL) - 3600)
+			while (tmpqueue->memTAIL->prev != tmpqueue->memHEAD->next && tmpqueue->memTAIL->prev->collect_time < time(NULL) - 3)
 				memusage_pop(tmpqueue);
 			header->type = 'a';
 			header->size = sizeof(p_head) + (sizeof(float) * 2);

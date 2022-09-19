@@ -91,6 +91,7 @@ int main()
 	act.sa_handler = quit;
 	sigaction(SIGINT, &act, NULL);
 	// sigaction(SIGSEGV, &act, NULL);
+	signal(SIGCHLD, SIG_IGN);
 	
 	// daemon_init();
 	packet *queue = init();
