@@ -23,14 +23,14 @@ void send_query(char *s)
 	// MYSQL_ROW row;
 	// write(1, s, ft_strlen(s));
 	// write(1, "\n", 1);
-	// mysql_query(conn, s);
+	mysql_query(conn, s);
 }
 
 void chk_data(cpuinfo *info)
 {
 	MYSQL_RES *res;
 	MYSQL_ROW row;
-	if (info->cpu_usr >= 70000)
+	if (info->cpu_usr >= 100000)
 	{
 		mysql_query(conn, "select idx from cpuinfo order by idx desc limit 1;");
 		res = mysql_use_result(conn);
@@ -39,6 +39,7 @@ void chk_data(cpuinfo *info)
 		fprintf(fp, "%s\n", row[0]);
 		writelog(logfd, TRACE, "Saved Special Case");
 		mysql_free_result(res);
+		fclose(fp);
 	}
 }
 
@@ -63,7 +64,7 @@ void *saver(void *queu)
 			cpuinfo *tmp = cpu_pop(queue);
 			print_delta('c', tmp->delta_usage);
 			sprintf(buf, "INSERT INTO cpuinfo (id, usr, sys, iowait, idle) VALUES (%d, %lu, %lu, %lu, %lu);", tmp->id, tmp->cpu_usr, tmp->cpu_sys, tmp->cpu_iowait, tmp->cpu_idle);
-			// sprintf(buf, "INSERT INTO cpuinfo (id, usr, sys, iowait, idle) VALUES (%d, %lu, %lu, %lu, %lu);", tmp->id, (unsigned long)80000, tmp->cpu_sys, tmp->cpu_iowait, tmp->cpu_idle);
+			// sprintf(buf, "INSERT INTO cpuinfo (id, usr, sys, iowait, idle) VALUES (%d, %lu, %lu, %lu, %lu);", tmp->id, (unsigned long)111000, tmp->cpu_sys, tmp->cpu_iowait, tmp->cpu_idle);
 			send_query(buf);
 			chk_data(tmp);
 			free_s(tmp);
@@ -119,8 +120,9 @@ void *saver(void *queu)
 			diskinfo *dinfo;
 			while ((dinfo = disk_pop(tmp)) != NULL)
 			{
-				sprintf(buf, "INSERT INTO diskinfo (id, name, type, total, used, available, mounted) VALUES (%d, %s, %s, %lu, %lu, %lu, %s)", dinfo->id, dinfo->name, dinfo->type, dinfo->total, dinfo->used, dinfo->available, dinfo->mounted);
+				sprintf(buf, "INSERT INTO diskinfo (id, name, type, total, used, available, mount) VALUES (%d, \'%s\', \'%s\', %lu, %lu, %lu, \'%s\')", dinfo->id, dinfo->name, dinfo->type, dinfo->total, dinfo->used, dinfo->available, dinfo->mounted);
 				send_query(buf);
+				// printf("%s\n",buf);
 				free_s(dinfo);
 			}
 			free_s(tmp);
@@ -128,7 +130,7 @@ void *saver(void *queu)
 		if (queue->udpqueue->next)
 		{
 			udppacket *tmp = udp_pop(queue);
-			sprintf(buf, "INSERT INTO udp (id, pid, ip, port, begintime, pkt_no, byte, elapse_time) VALUES (%d, %lu, %s, %d, %lu, %d, %d, %lf);", tmp->id, tmp->pid, tmp->ip, tmp->port, tmp->begintime, tmp->pkt_no, tmp->byte, tmp->elapse_time);
+			sprintf(buf, "INSERT INTO udp (id, pid, ip, port, begintime, pkt_no, byte, elapse_time) VALUES (%d, %lu, \'%s\', %d, %lu, %d, %d, %lf);", tmp->id, tmp->pid, tmp->ip, tmp->port, tmp->begintime, tmp->pkt_no, tmp->byte, tmp->elapse_time);
 			send_query(buf);
 			free_s(tmp);
 		}

@@ -25,8 +25,6 @@ static int statictime;
 static udpmatric matric;
 
 ssize_t (*origin_write)(int fd, const void *buf, size_t n);
-ssize_t (*new_write)(int fd, const void *buf, size_t n);
-
 int oneminute()
 {
 	if (!statictime)

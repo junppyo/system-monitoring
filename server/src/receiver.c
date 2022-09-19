@@ -37,7 +37,7 @@ int rcv(int fd, void *message, int size)
 	itoa(ret, s);
 	char *logmessage = ft_strjoin(s, "byte received");
 	writelog(logfd, TRACE, logmessage);
-	// printf("%d received\n", ret);
+	// printf("size: %d, %d received\n", size, ret);
 	free_s(logmessage);
 	return ret;
 }
@@ -147,12 +147,12 @@ void *tcp_open(void *queu)
 			writelog(logfd, TRACE, "client reconnect");
 			rcv(client_sock, header, sizeof(struct s_packethead));
 		}
-		// printf("type: %c, size: %d\n", header->type, header->size);
+		printf("type: %c, size: %d\n", header->type, header->size);
 		if (header->type != 'c' && header->type != 'm' && header->type != 'n' && header->type != 'p' && header->type != 'd' && header->type != 'a')
 		{
 			close(client_sock);
 			writelog(logfd, ERROR, "wrong packet received");
-			return 0;
+			continue;
 		}
 		if (header->type == 'c')
 		{
@@ -161,7 +161,7 @@ void *tcp_open(void *queu)
 			{
 				close(client_sock);
 				writelog(logfd, ERROR, "wrong packet received1");
-				return 0;
+				continue;
 			}
 			cpu_append(queue, tmp);
 		}
@@ -172,7 +172,7 @@ void *tcp_open(void *queu)
 			{
 				close(client_sock);
 				writelog(logfd, ERROR, "wrong packet received2");
-				return 0;
+				continue;
 			}
 			mem_append(queue, tmp);
 		}
@@ -183,7 +183,7 @@ void *tcp_open(void *queu)
 			{
 				close(client_sock);
 				writelog(logfd, ERROR, "wrong packet received3");
-				return 0;
+				continue;
 			}
 			net_append(queue, tmp);
 		}
@@ -195,10 +195,11 @@ void *tcp_open(void *queu)
 			{
 				close(client_sock);
 				writelog(logfd, ERROR, "wrong packet received4");
-				return 0;
+				continue;
 			}
 			tmp->HEAD = malloc(sizeof(struct s_procinfo));
 			tmp->HEAD->next = NULL;
+
 			while (i <= tmp->len)
 			{
 				pinfo = malloc(sizeof(procinfo));
@@ -206,17 +207,17 @@ void *tcp_open(void *queu)
 				{
 					close(client_sock);
 					writelog(logfd, ERROR, "wrong packet received5");
-					return 0;
+					continue;
 				}
 				if (pinfo->cmdline_len)
 				{
 					pinfo->cmdline = malloc(sizeof(char) * (pinfo->cmdline_len));
-					if (rcv(client_sock, pinfo->cmdline, pinfo->cmdline_len) != pinfo->cmdline_len)
+					int aa;
+					if ((aa = rcv(client_sock, pinfo->cmdline, pinfo->cmdline_len)) != pinfo->cmdline_len)
 					{
-						printf("%d %s\n", pinfo->cmdline_len, pinfo->cmdline);
 						close(client_sock);
 						writelog(logfd, ERROR, "wrong packet received6");
-						return 0;
+						continue;
 					}
 				}
 				append(tmp, pinfo);
@@ -233,7 +234,7 @@ void *tcp_open(void *queu)
 			{
 				close(client_sock);
 				writelog(logfd, ERROR, "wrong packet received");
-				return 0;
+				continue;
 			}
 			tmp->HEAD = malloc(sizeof(struct s_diskinfo));
 			tmp->HEAD->next = NULL;
@@ -244,9 +245,8 @@ void *tcp_open(void *queu)
 				{
 					close(client_sock);
 					writelog(logfd, ERROR, "wrong packet received");
-					return 0;
+					continue;
 				}
-				// printf("%d %s %s %lu %lu %s\n", dinfo->id, dinfo->name, dinfo->type, dinfo->total, dinfo->used, dinfo->mounted);
 				disk_append(tmp, dinfo);
 				i++;
 			}
@@ -258,7 +258,7 @@ void *tcp_open(void *queu)
 			rcv(client_sock, &cpuavg, sizeof(float));
 			float memavg;
 			rcv(client_sock, &memavg, sizeof(float));
-			printf("cpuavg: %f  memavg: %f\n", cpuavg, memavg);
+			printf("cpuavg: %f%%  memavg: %f%%\n", cpuavg * 100, memavg * 100);
 		}
 	}
 	close(serv_sock);

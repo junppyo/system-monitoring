@@ -2,6 +2,8 @@
 
 int	ft_strlen(const char *s)
 {
+	if (!s)
+		return 0;
 	int	i;
 
 	i = 0;
@@ -294,6 +296,15 @@ char *make_packet(void *s1, int size1, void *s2, int size2)
 
 		while (++i < size1)
 			ret[i] = ((char *)s1)[i];
+		return ret;
+	}
+	else if (!s1)
+	{
+		char *ret = malloc(size2);
+		int i = -1;
+
+		while (++i < size2)
+			ret[i] = ((char *)s2)[i];
 		return ret;
 	}
 	char *ret = malloc(size1 + size2);

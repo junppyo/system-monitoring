@@ -68,7 +68,7 @@ void *disk_collect(void *packe)
 	}
 	writelog(logfd, DEBUG, "disk collector is stopped");
 	return (0);
-}
+}	
 
 
 void collect(packet *queue)

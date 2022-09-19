@@ -227,7 +227,7 @@ void read_disk(packet *node)
 		info = malloc(sizeof(diskinfo));
 		while (tmp != NULL)
 		{
-			i++;
+		 	i++;
 			if (i == 1)
 				copy(&info->name[0], tmp);
 			else if (i == 2)

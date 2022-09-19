@@ -3,7 +3,7 @@
 
 packet *init(void)
 {
-	logfd = fopen("client_log", "a");
+	logfd = fopen("client_log", "w");
 	flag = 1;
 	packet *queue = malloc(sizeof(packet));
 	queue->cpuqueue = malloc(sizeof(cpuinfo));
@@ -18,6 +18,14 @@ packet *init(void)
 	queue->matricqueue->next = NULL;
 	queue->diskqueue = malloc(sizeof(diskinfo));
 	queue->diskqueue->next = NULL;
+
+	pthread_mutex_init(&queue->cpu_mutex, NULL);
+	pthread_mutex_init(&queue->mem_mutex, NULL);
+	pthread_mutex_init(&queue->net_mutex, NULL);
+	pthread_mutex_init(&queue->plist_mutex, NULL);
+	pthread_mutex_init(&queue->udp_mutex, NULL);
+	pthread_mutex_init(&queue->matric_mutex, NULL);
+	pthread_mutex_init(&queue->disk_mutex, NULL);
 
 	FILE *config = fopen("client.config", "r");
 	if (!config)

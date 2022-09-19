@@ -97,7 +97,7 @@ int main()
 	pthread_t thread[3];
 
 	packet *queue = queue_init();
-	logfd = fopen("server_log", "a");
+	logfd = fopen("server_log", "w");
 	pthread_create(&thread[0], NULL, saver, (void *)queue);
 	pthread_create(&thread[1], NULL, tcp_open, queue);
 	pthread_create(&thread[2], NULL, udp_open, queue);

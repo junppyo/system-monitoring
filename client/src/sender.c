@@ -14,7 +14,7 @@ void snd(void *message, int size)
 		return ;
 	}
 	itoa(ret, s);
-	printf("%d send\n", ret);
+	// printf("%d send\n", ret);
 	char *logmessage = ft_strjoin(s, "byte send");
 	writelog(logfd, TRACE, logmessage);
 	free_s(logmessage);
@@ -89,7 +89,6 @@ void *connect_socket(void *packe)
 			header->size = sizeof(p_head) + sizeof(cpuinfo);
 			cpuinfo *tmp = cpu_pop(packet);
 			cpu_usage = ((float)tmp->cpu_usr / (float)(tmp->cpu_usr + tmp->cpu_sys + tmp->cpu_iowait + tmp->cpu_idle));
-			printf("cpuusage: %f\n", cpu_usage);
 			tmp->delta_usage = cpuusage_append(tmpqueue, cpu_usage);
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(cpuinfo));
 			// printf("send cpu\n");
@@ -103,7 +102,6 @@ void *connect_socket(void *packe)
 			header->size = sizeof(p_head) + sizeof(meminfo);
 			meminfo *tmp = mem_pop(packet);
 			mem_usage = (float)tmp->mem_used / (float)tmp->mem_total;
-			printf("memusage: %f\n", mem_usage);
 			tmp->delta_usage = memusage_append(tmpqueue, mem_usage);
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(meminfo));
 			// printf("send mem\n");
@@ -124,43 +122,56 @@ void *connect_socket(void *packe)
 			// break;
 		}
 
-		// if (packet->plistqueue->next)
-		// {
-		// 	header->type = 'p';
-		// 	list = plist_pop(packet);
-		// 	int size = 0;
-		// 	char *tmp = NULL;
-		// 	char *message = NULL;
-		// 	int i = 0;		
-		// 	while ((pinfo = pop(list)) != 0)
-		// 	{
-		// 		// printf("pid: %d cmdline_lne: %d cmdline: %s ft_strlen: %d\n", pinfo->pid, pinfo->cmdline_len, pinfo->cmdline, ft_strlen(pinfo->cmdline));
-		// 		tmp = make_packet(message, size, pinfo, sizeof(procinfo));
-		// 		free_s(message);
-		// 		message = tmp;
-		// 		size += sizeof(procinfo);
-		// 		if (pinfo->cmdline_len)
-		// 		{
-		// 			tmp = make_packet(message, size, pinfo->cmdline, pinfo->cmdline_len);
-		// 			size += pinfo->cmdline_len;
-		// 			free_s(message);
-		// 			message = tmp;
-		// 			free_s(pinfo->cmdline);
-		// 		}
-		// 		free_s(pinfo);
-		// 		i++;
-		// 	}
-		// 	header->size = sizeof(p_head) + sizeof(plist) + size;
-		// 	tmp = make_packet(header, sizeof(p_head), list, sizeof(plist));
-		// 	char *real = make_packet(tmp, sizeof(p_head)+sizeof(plist), message, size);
-		// 	snd(real, header->size);
-		// 	free_s(message);
-		// 	free_s(list->HEAD);
-		// 	free_s(list);
-		// 	free_s(tmp);
-		// 	free_s(real);
-		// 	// break ;
-		// }
+		if (packet->plistqueue->next)
+		{
+			header->type = 'p';
+			list = plist_pop(packet);
+			int size = 0;
+			char *tmp = NULL;
+			char *message = NULL;
+			int i = 0;
+			message = make_packet(header, sizeof(p_head), list, sizeof(plist));
+			size += sizeof(p_head) + sizeof(plist);
+			while ((pinfo = pop(list)) != 0)
+			{
+				// printf("pid: %d cmdline_lne: %d cmdline: %s ft_strlen: %d\n", pinfo->pid, pinfo->cmdline_len, pinfo->cmdline, ft_strlen(pinfo->cmdline));
+				tmp = make_packet(message, size, pinfo, sizeof(procinfo));
+				free_s(message);
+				message = tmp;
+				size += sizeof(procinfo);
+				// printf("%d %s %d\n", pinfo->pid, pinfo->name, pinfo->cmdline_len);
+				if (pinfo->cmdline_len)
+				{
+					// printf("%s\n", pinfo->cmdline);
+					tmp = make_packet(message, size, pinfo->cmdline, pinfo->cmdline_len);
+					size += pinfo->cmdline_len;
+					free_s(message);
+					message = tmp;
+					free_s(pinfo->cmdline);
+				}
+				free_s(pinfo);
+				if (size > 60000)
+				{
+				// printf("size: %d\n", size);
+					snd(message, size);
+					free_s(message);
+					message = NULL;
+					size = 0;
+				}
+				i++;
+			}
+			// header->size = sizeof(p_head) + sizeof(plist) + size;
+			// tmp = make_packet(header, sizeof(p_head), list, sizeof(plist));
+			// char *real = make_packet(tmp, sizeof(p_head)+sizeof(plist), message, size);
+			// snd(real, header->size);
+			snd(message, size);
+			free_s(message);
+			free_s(list->HEAD);
+			free_s(list);
+			// free_s(tmp);
+			// free_s(real);
+			// break ;
+		}
 
 		if (packet->diskqueue->next)
 		{
@@ -213,7 +224,6 @@ void *connect_socket(void *packe)
 			free_s(tmp);
 			free_s(message);
 			// break;
-	
 		}
 	}
 	free_s(header);
