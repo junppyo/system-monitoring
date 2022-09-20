@@ -173,7 +173,7 @@ struct s_memusage
 	struct s_memusage *next;
 };
 
-struct s_tmpqueue
+struct s_usagelist
 {
 	struct s_cpuusage *cpuHEAD;
 	struct s_cpuusage *cpuTAIL;
@@ -189,11 +189,11 @@ struct s_tmpqueue
 	float memtotal;
 };
 
-struct s_tmpqueue *tmpqueue_init();
-float cpuusage_append(struct s_tmpqueue *queue, float usage);
-float memusage_append(struct s_tmpqueue *queue, float usage);
-void cpuusage_pop(struct s_tmpqueue *queue);
-void memusage_pop(struct s_tmpqueue *queue);
+struct s_usagelist *usagelist_init();
+float cpuusage_append(struct s_usagelist *queue, float usage);
+float memusage_append(struct s_usagelist *queue, float usage);
+void cpuusage_pop(struct s_usagelist *queue);
+void memusage_pop(struct s_usagelist *queue);
 
 
 void cpu_append(packet *packet, cpuinfo *node);

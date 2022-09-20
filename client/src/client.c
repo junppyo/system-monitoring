@@ -50,27 +50,32 @@ packet *init(void)
 		fgets(buf, sizeof(buf), config);
 		tmp = strtok(buf, "=");
 		tmp = strtok(NULL, "=");
-		CPU_CYCLE = atof(tmp) * 1000000;
+		// CPU_CYCLE = atof(tmp) * 1000000;
+		CPU_CYCLE = atof(tmp) * 100000;
 
 		fgets(buf, sizeof(buf), config);
 		tmp = strtok(buf, "=");
 		tmp = strtok(NULL, "=");
-		MEM_CYCLE = atof(tmp) * 1000000;
+		// MEM_CYCLE = atof(tmp) * 1000000;
+		MEM_CYCLE = atof(tmp) * 100000;
 		
 		fgets(buf, sizeof(buf), config);
 		tmp = strtok(buf, "=");
 		tmp = strtok(NULL, "=");
-		NET_CYCLE = atof(tmp) * 1000000;
+		// NET_CYCLE = atof(tmp) * 1000000;
+		NET_CYCLE = atof(tmp) * 100000;
 		
 		fgets(buf, sizeof(buf), config);
 		tmp = strtok(buf, "=");
 		tmp = strtok(NULL, "=");
-		PROC_CYCLE = atof(tmp) * 1000000;
+		// PROC_CYCLE = atof(tmp) * 1000000;
+		PROC_CYCLE = atof(tmp) * 100000;
 
 		fgets(buf, sizeof(buf), config);
 		tmp = strtok(buf, "=");
 		tmp = strtok(NULL, "=");
-		DISK_CYCLE = atof(tmp) * 1000000;
+		// DISK_CYCLE = atof(tmp) * 1000000;
+		DISK_CYCLE = atof(tmp) * 100000;
 	}
 	
 	return (queue);
@@ -90,7 +95,7 @@ int main()
 	static struct sigaction	act;
 	act.sa_handler = quit;
 	sigaction(SIGINT, &act, NULL);
-	// sigaction(SIGSEGV, &act, NULL);
+	sigaction(SIGSEGV, &act, NULL);
 	signal(SIGCHLD, SIG_IGN);
 	
 	// daemon_init();
@@ -103,7 +108,6 @@ int main()
 	writelog(logfd, DEBUG, s);
 	collect(queue);
 	pthread_create(&thread, NULL, connect_socket,(void*)queue);
-	
 	while (1)
 	{
 		if (flag == 2)
@@ -112,7 +116,12 @@ int main()
 			flag = 1;
 		}
 	}
-
+	pthread_join(thread, 0);
+	pthread_join(collect_thread[0], 0);
+	pthread_join(collect_thread[1], 0);
+	pthread_join(collect_thread[2], 0);
+	pthread_join(collect_thread[3], 0);
+	pthread_join(collect_thread[4], 0);
 	
 	free_s(queue->cpuqueue);
 	free_s(queue->memqueue);
@@ -128,9 +137,12 @@ int main()
 	pthread_mutex_destroy(&queue->udp_mutex);
 	pthread_mutex_destroy(&queue->matric_mutex);
 	pthread_mutex_destroy(&queue->disk_mutex);
+
 	free_s(queue);
-	fclose(logfd);
+
+	write(1, "4", 1);
 	writelog(logfd, DEBUG, "exit");
+	fclose(logfd);
 	
 	return 0;
 }

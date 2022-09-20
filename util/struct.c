@@ -270,9 +270,9 @@ disklist *disklist_pop(packet *packet)
 	return ret;
 }
 
-struct s_tmpqueue *tmpqueue_init()
+struct s_usagelist *usagelist_init()
 {
-	struct s_tmpqueue *queue;
+	struct s_usagelist *queue;
 
 	queue->cpuHEAD = malloc(sizeof(struct s_cpuusage));
 	queue->cpuTAIL = malloc(sizeof(struct s_cpuusage));
@@ -302,7 +302,7 @@ struct s_tmpqueue *tmpqueue_init()
 	return queue;
 }
 
-float cpuusage_append(struct s_tmpqueue *queue, float usage)
+float cpuusage_append(struct s_usagelist *queue, float usage)
 {
 	pthread_mutex_lock(&queue->cpuusage_mutex);
 	struct s_cpuusage *node = malloc(sizeof(struct s_cpuusage));
@@ -327,7 +327,7 @@ float cpuusage_append(struct s_tmpqueue *queue, float usage)
 	}
 }
 
-float memusage_append(struct s_tmpqueue *queue, float usage)
+float memusage_append(struct s_usagelist *queue, float usage)
 {
 	pthread_mutex_lock(&queue->memusage_mutex);
 	struct s_memusage *node = malloc(sizeof(struct s_memusage));
@@ -353,7 +353,7 @@ float memusage_append(struct s_tmpqueue *queue, float usage)
 }
 
 // struct s_cpuusage *
-void cpuusage_pop(struct s_tmpqueue *queue)
+void cpuusage_pop(struct s_usagelist *queue)
 {
 	pthread_mutex_lock(&queue->cpuusage_mutex);
 	if (queue->cpuHEAD->next == queue->cpuTAIL)
@@ -374,7 +374,7 @@ void cpuusage_pop(struct s_tmpqueue *queue)
 }
 
 // struct s_memusage *
-void memusage_pop(struct s_tmpqueue *queue)
+void memusage_pop(struct s_usagelist *queue)
 {
 	pthread_mutex_lock(&queue->memusage_mutex);
 	if (queue->memHEAD->next == queue->memTAIL)

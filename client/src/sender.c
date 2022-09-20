@@ -11,6 +11,7 @@ void snd(void *message, int size)
 	if (ret < 0)
 	{
 		writelog(logfd, TRACE, "전송 실패");
+		reconnect(0);
 		return ;
 	}
 	itoa(ret, s);
@@ -22,6 +23,7 @@ void snd(void *message, int size)
 
 void reconnect(int sig)
 {
+	// printf("disconnect\n");
 	writelog(logfd, ERROR, "서버와의 연결이 끊어졌습니다.");
 	writelog(logfd, DEBUG, "재접속 시도 중...");
 	flag = 0;
@@ -77,7 +79,7 @@ void *connect_socket(void *packe)
 	p_head *header = malloc(sizeof(struct s_packethead));
 	float cpu_usage;
 	float mem_usage;
-	struct s_tmpqueue *tmpqueue = tmpqueue_init();
+	struct s_usagelist *usagelist = usagelist_init();
 	time_t nowtime = time(NULL);
 	time_t tmptime = time(NULL);
 
@@ -89,8 +91,8 @@ void *connect_socket(void *packe)
 			header->size = sizeof(p_head) + sizeof(cpuinfo);
 			cpuinfo *tmp = cpu_pop(packet);
 			cpu_usage = ((float)tmp->cpu_usr / (float)(tmp->cpu_usr + tmp->cpu_sys + tmp->cpu_iowait + tmp->cpu_idle));
-			tmp->delta_usage = cpuusage_append(tmpqueue, cpu_usage);
-			printf("cpu delta: %f\n", tmp->delta_usage);
+			tmp->delta_usage = cpuusage_append(usagelist, cpu_usage);
+			// printf("cpu delta: %f\n", tmp->delta_usage);
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(cpuinfo));
 			// printf("send cpu\n");
 			snd(message, sizeof(p_head) + sizeof(cpuinfo));
@@ -103,8 +105,8 @@ void *connect_socket(void *packe)
 			header->size = sizeof(p_head) + sizeof(meminfo);
 			meminfo *tmp = mem_pop(packet);
 			mem_usage = (float)tmp->mem_used / (float)tmp->mem_total;
-			tmp->delta_usage = memusage_append(tmpqueue, mem_usage);
-			printf("mem delta: %f\n", tmp->delta_usage);
+			tmp->delta_usage = memusage_append(usagelist, mem_usage);
+			// printf("mem delta: %f\n", tmp->delta_usage);
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(meminfo));
 			// printf("send mem\n");
 			snd(message, sizeof(p_head) + sizeof(meminfo));
@@ -132,12 +134,16 @@ void *connect_socket(void *packe)
 			char *tmp = NULL;
 			char *message = NULL;
 			int i = 0;
-			message = make_packet(header, sizeof(p_head), list, sizeof(plist));
-			size += sizeof(p_head) + sizeof(plist);
+			// message = make_packet(header, sizeof(p_head), list, sizeof(plist));
+			// size += sizeof(p_head) + sizeof(plist);
 			while ((pinfo = pop(list)) != 0)
 			{
+
+				i++;
+					// printf("pid:%d name:%s cmdlinelen: %d\n", pinfo->pid, pinfo->name, pinfo->cmdline_len);
 				tmp = make_packet(message, size, pinfo, sizeof(procinfo));
-				free_s(message);
+				if (message)
+					free_s(message);
 				message = tmp;
 				size += sizeof(procinfo);
 				if (pinfo->cmdline_len)
@@ -146,29 +152,42 @@ void *connect_socket(void *packe)
 					size += pinfo->cmdline_len;
 					free_s(message);
 					message = tmp;
-					free_s(pinfo->cmdline);
+					// free_s(pinfo->cmdline);
 				}
+				// else
+				// 	pinfo->cmdline = NULL;
+				// if (pinfo->cmdline)
+				// 	printf("%d %s %s\n", pinfo->pid, pinfo->name, pinfo->cmdline);
+				// else
+				// 	printf("%d %s\n", pinfo->pid, pinfo->name);
 				free_s(pinfo);
 				if (size > 60000)
 				{
-				// printf("size: %d\n", size);
-					snd(message, size);
+					list->len = i;
+					i = 0;
+					header->size = sizeof(p_head) + sizeof(plist) + size;
+					tmp = make_packet(header, sizeof(p_head), list, sizeof(plist));
+					char *real = make_packet(tmp, sizeof(p_head)+sizeof(plist), message, size);
+					snd(real, header->size);
+					// snd(message, size);
 					free_s(message);
+					free_s(tmp);
+					free_s(real);
 					message = NULL;
 					size = 0;
 				}
-				i++;
 			}
-			// header->size = sizeof(p_head) + sizeof(plist) + size;
-			// tmp = make_packet(header, sizeof(p_head), list, sizeof(plist));
-			// char *real = make_packet(tmp, sizeof(p_head)+sizeof(plist), message, size);
-			// snd(real, header->size);
-			snd(message, size);
+			list->len = i;
+			header->size = sizeof(p_head) + sizeof(plist) + size;
+			tmp = make_packet(header, sizeof(p_head), list, sizeof(plist));
+			char *real = make_packet(tmp, sizeof(p_head)+sizeof(plist), message, size);
+			snd(real, header->size);
+			// snd(message, size);
 			free_s(message);
 			free_s(list->HEAD);
 			free_s(list);
-			// free_s(tmp);
-			// free_s(real);
+			free_s(tmp);
+			free_s(real);
 			// break ;
 		}
 
@@ -205,16 +224,16 @@ void *connect_socket(void *packe)
 
 		if (tmptime < time(NULL) - 3)
 		{
-			while (tmpqueue->cpuTAIL->prev != tmpqueue->cpuHEAD->next && tmpqueue->cpuTAIL->prev->collect_time < time(NULL) - 3)
-				cpuusage_pop(tmpqueue);
-			while (tmpqueue->memTAIL->prev != tmpqueue->memHEAD->next && tmpqueue->memTAIL->prev->collect_time < time(NULL) - 3)
-				memusage_pop(tmpqueue);
+			while (usagelist->cpuTAIL->prev != usagelist->cpuHEAD->next && usagelist->cpuTAIL->prev->collect_time < time(NULL) - 3)
+				cpuusage_pop(usagelist);
+			while (usagelist->memTAIL->prev != usagelist->memHEAD->next && usagelist->memTAIL->prev->collect_time < time(NULL) - 3)
+				memusage_pop(usagelist);
 			header->type = 'a';
 			header->size = sizeof(p_head) + (sizeof(float) * 2);
-			float cpuusage_avg = (float)tmpqueue->cputotal / (float)tmpqueue->cpulen;
-			float memusage_avg = (float)tmpqueue->memtotal / (float)tmpqueue->memlen;
-			printf("cputotal: %f cpulen: %d\n", tmpqueue->cputotal, tmpqueue->cpulen);
-			printf("memtotal: %f memlen: %d\n", tmpqueue->memtotal, tmpqueue->memlen);
+			float cpuusage_avg = (float)usagelist->cputotal / (float)usagelist->cpulen;
+			float memusage_avg = (float)usagelist->memtotal / (float)usagelist->memlen;
+			// printf("cputotal: %f cpulen: %d\n", usagelist->cputotal, usagelist->cpulen);
+			// printf("memtotal: %f memlen: %d\n", usagelist->memtotal, usagelist->memlen);
 			printf("cpuavg: %f  memavg: %f\n", cpuusage_avg, memusage_avg);
 			char *tmp = make_packet(header, sizeof(p_head), &cpuusage_avg, sizeof(float));
 			char *message = make_packet(tmp, sizeof(p_head) + sizeof(float), &memusage_avg, sizeof(float));
@@ -225,8 +244,10 @@ void *connect_socket(void *packe)
 			// break;
 		}
 	}
+	// flag = 0;
 	free_s(header);
 	close(my_sock);
 	writelog(logfd, DEBUG, "전송 완료");
+	
 	return 0;
 }

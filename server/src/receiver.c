@@ -94,12 +94,11 @@ void *udp_open(void *queu)
 	return 0;
 }
 
-void *tcp_open(void *queu)
+int open_sock()
 {
+	// printf("connect\n");
 	struct sockaddr_in client_addr;
-	packet *queue = (struct s_packet*) queu;
-	int client_sock = 0;
-
+	int client_sock;
 	if (!serv_sock)
 	{
 		serv_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -128,6 +127,43 @@ void *tcp_open(void *queu)
 	client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
 	writelog(logfd, TRACE, "client accpet");
 
+	return client_sock;
+}
+
+void *tcp_open(void *queu)
+{
+	// struct sockaddr_in client_addr;
+	packet *queue = (struct s_packet*) queu;
+	int client_sock = open_sock();
+
+	// if (!serv_sock)
+	// {
+	// 	serv_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+	// 	if(serv_sock == -1)
+	// 		writelog(logfd, ERROR, "socket error");
+	// 		memset(&serv_addr, 0, sizeof(serv_addr));
+	// 		serv_addr.sin_family = AF_INET;
+	// 		serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	// 		serv_addr.sin_port = htons(DEFAULT_PORT);
+
+	// 		if(bind(serv_sock,(struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
+	// 		{
+	// 			printf("bind error\n");
+	// 			writelog(logfd, ERROR, "bind error");
+	// 		}
+	// 		writelog(logfd, TRACE, "bind success");
+
+	// 		if(listen(serv_sock,5) == -1)
+	// 			writelog(logfd, ERROR, "listen error");
+
+	// 		writelog(logfd, TRACE, "listen success");
+	// }
+	// writelog(logfd, TRACE, "wait client");
+	// socklen_t clnt_addr_size = sizeof(client_addr);
+	// client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
+	// writelog(logfd, TRACE, "client accpet");
+
 	pthread_t thread;
 	pthread_create(&thread, NULL, tcp_open, queu);
 
@@ -138,12 +174,14 @@ void *tcp_open(void *queu)
 	time_t tmptime = time(NULL);
 	
 	// while(tmptime > time(NULL) - 10)
+
 	while (1)
 	{
 		int n = 0;
 		if (rcv(client_sock, header, sizeof(struct s_packethead)) <= 0)
 		{
-			client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
+			client_sock = open_sock();
+			// client_sock = accept(serv_sock,(struct sockaddr*)&client_addr,&clnt_addr_size);
 			writelog(logfd, TRACE, "client reconnect");
 			rcv(client_sock, header, sizeof(struct s_packethead));
 		}
@@ -190,40 +228,58 @@ void *tcp_open(void *queu)
 		if (header->type == 'p')
 		{
 			int i = 0;
+			int total = 0;
 			plist *tmp = malloc(sizeof(struct s_plist));
-			if (rcv(client_sock, tmp, sizeof(struct s_plist)) != sizeof(struct s_plist))
+			if ( rcv(client_sock, tmp, sizeof(struct s_plist)) != sizeof(struct s_plist))
 			{
 				close(client_sock);
+				close(serv_sock);
 				writelog(logfd, ERROR, "wrong packet received4");
 				continue;
 			}
 			tmp->HEAD = malloc(sizeof(struct s_procinfo));
 			tmp->HEAD->next = NULL;
-
-			while (i <= tmp->len)
+			while (i < tmp->len)
 			{
+				int aa = 0;
 				pinfo = malloc(sizeof(procinfo));
-				if (rcv(client_sock, pinfo, sizeof(procinfo)) != sizeof(procinfo))
+				if ((aa = rcv(client_sock, pinfo, sizeof(procinfo))) != sizeof(procinfo))
 				{
 					close(client_sock);
 					writelog(logfd, ERROR, "wrong packet received5");
-					continue;
+					break;
 				}
+				total += aa;
+				// printf("pid:%d name:%s cmdlinelen: %d\n", pinfo->pid, pinfo->name, pinfo->cmdline_len);
 				if (pinfo->cmdline_len)
 				{
 					pinfo->cmdline = malloc(sizeof(char) * (pinfo->cmdline_len));
-					int aa;
 					if ((aa = rcv(client_sock, pinfo->cmdline, pinfo->cmdline_len)) != pinfo->cmdline_len)
 					{
+						// printf("now byte: %d\n", total);
 						close(client_sock);
 						writelog(logfd, ERROR, "wrong packet received6");
-						continue;
+						writelog(logfd, DEBUG, "recreate client sock");
+						break;
 					}
+					total += aa;
 				}
+				else
+					pinfo->cmdline = NULL;
 				append(tmp, pinfo);
 				i++;
 			}
-			plist_append(queue, tmp);
+			// if (i > tmp->len)
+				plist_append(queue, tmp);
+			// else
+			// {
+			// 	procinfo *pinfo;
+			// 	while ((pinfo = pop(tmp)) != NULL)
+			// 	{
+			// 		free_s(pinfo);
+			// 	}
+			// 	free_s(tmp);
+			// }
 			// break ;
 		}
 		if (header->type == 'd')

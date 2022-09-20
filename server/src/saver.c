@@ -11,6 +11,8 @@ void print_delta(char c, float n)
 int connect_db(void)
 {
 	conn = mysql_init(NULL);
+	bool reconnect = 0;
+	mysql_options(conn, MYSQL_OPT_RECONNECT, &reconnect);
 	if (!mysql_real_connect(conn, "127.0.0.1", "root", "root", "exem", 0, NULL, 0))
 //	if (!mysql_real_connect(conn, server, user, password, 0, NULL, 0))
 		return 1;
@@ -21,8 +23,8 @@ void send_query(char *s)
 {
 	// MYSQL_RES *res;
 	// MYSQL_ROW row;
-	// write(1, s, ft_strlen(s));
-	// write(1, "\n", 1);
+	write(1, s, ft_strlen(s));
+	write(1, "\n", 1);
 	mysql_query(conn, s);
 }
 
@@ -56,7 +58,6 @@ void *saver(void *queu)
 		writelog(logfd, ERROR, "Fail connect DB");
 		sleep(1);
 	}
-
 	while (1)
 	{
 		if (queue->cpuqueue->next)
