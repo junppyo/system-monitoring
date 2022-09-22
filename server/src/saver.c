@@ -3,15 +3,10 @@
 MYSQL *conn;
 FILE *logfd;
 
-void print_delta(char c, float n)
-{
-
-}
-
 int connect_db(void)
 {
 	conn = mysql_init(NULL);
-	bool reconnect = 0;
+	bool reconnect = 1;
 	mysql_options(conn, MYSQL_OPT_RECONNECT, &reconnect);
 	if (!mysql_real_connect(conn, "127.0.0.1", "root", "root", "exem", 0, NULL, 0))
 //	if (!mysql_real_connect(conn, server, user, password, 0, NULL, 0))
@@ -23,9 +18,9 @@ void send_query(char *s)
 {
 	// MYSQL_RES *res;
 	// MYSQL_ROW row;
-	write(1, s, ft_strlen(s));
-	write(1, "\n", 1);
-	mysql_query(conn, s);
+	// write(1, s, ft_strlen(s));
+	// write(1, "\n", 1);
+	// mysql_query(conn, s);
 }
 
 void chk_data(cpuinfo *info)
@@ -63,9 +58,7 @@ void *saver(void *queu)
 		if (queue->cpuqueue->next)
 		{
 			cpuinfo *tmp = cpu_pop(queue);
-			print_delta('c', tmp->delta_usage);
 			sprintf(buf, "INSERT INTO cpuinfo (id, usr, sys, iowait, idle, deltausage) VALUES (%d, %lu, %lu, %lu, %lu, %f);", tmp->id, tmp->cpu_usr, tmp->cpu_sys, tmp->cpu_iowait, tmp->cpu_idle, tmp->delta_usage);
-			// sprintf(buf, "INSERT INTO cpuinfo (id, usr, sys, iowait, idle) VALUES (%d, %lu, %lu, %lu, %lu);", tmp->id, (unsigned long)111000, tmp->cpu_sys, tmp->cpu_iowait, tmp->cpu_idle);
 			send_query(buf);
 			chk_data(tmp);
 			free_s(tmp);
@@ -73,7 +66,6 @@ void *saver(void *queu)
 		if (queue->memqueue->next)
 		{
 			meminfo *tmp = mem_pop(queue);
-			// print_delta('m', tmp->delta_usage);
 			sprintf(buf, "INSERT INTO meminfo (id, free, total, used, swap, deltausage) VALUES (%d, %lu, %lu, %lu, %lu, %f);", tmp->id, tmp->mem_free, tmp->mem_total, tmp->mem_used, tmp->mem_swap, tmp->delta_usage);
 			send_query(buf);
 			free_s(tmp);

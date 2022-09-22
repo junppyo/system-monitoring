@@ -37,7 +37,10 @@ void reconnect(int sig)
 	while (connect(my_sock,(struct sockaddr*)&serv_addr,sizeof(serv_addr)) == -1)
 	{
 		if (errno == EBADF)
+		{
+			writelog(logfd, DEBUG, "remake socket");
 			my_sock = socket(PF_INET,SOCK_STREAM,IPPROTO_TCP);
+		}
 		sleep(1);
 		writelog(logfd, DEBUG, "재접속 시도 중...");
 	}
@@ -92,9 +95,7 @@ void *connect_socket(void *packe)
 			cpuinfo *tmp = cpu_pop(packet);
 			cpu_usage = ((float)tmp->cpu_usr / (float)(tmp->cpu_usr + tmp->cpu_sys + tmp->cpu_iowait + tmp->cpu_idle));
 			tmp->delta_usage = cpuusage_append(usagelist, cpu_usage);
-			// printf("cpu delta: %f\n", tmp->delta_usage);
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(cpuinfo));
-			// printf("send cpu\n");
 			snd(message, sizeof(p_head) + sizeof(cpuinfo));
 			free_s(message);
 			free_s(tmp);
@@ -106,9 +107,7 @@ void *connect_socket(void *packe)
 			meminfo *tmp = mem_pop(packet);
 			mem_usage = (float)tmp->mem_used / (float)tmp->mem_total;
 			tmp->delta_usage = memusage_append(usagelist, mem_usage);
-			// printf("mem delta: %f\n", tmp->delta_usage);
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(meminfo));
-			// printf("send mem\n");
 			snd(message, sizeof(p_head) + sizeof(meminfo));
 			free_s(message);
 			free_s(tmp);
@@ -152,14 +151,10 @@ void *connect_socket(void *packe)
 					size += pinfo->cmdline_len;
 					free_s(message);
 					message = tmp;
-					// free_s(pinfo->cmdline);
+					free_s(pinfo->cmdline);
 				}
-				// else
-				// 	pinfo->cmdline = NULL;
-				// if (pinfo->cmdline)
-				// 	printf("%d %s %s\n", pinfo->pid, pinfo->name, pinfo->cmdline);
-				// else
-				// 	printf("%d %s\n", pinfo->pid, pinfo->name);
+				else
+					pinfo->cmdline = NULL;
 				free_s(pinfo);
 				if (size > 60000)
 				{
@@ -219,7 +214,6 @@ void *connect_socket(void *packe)
 			free_s(dlist);
 			free_s(tmp);
 			free_s(sndmessage);
-			// break ;
 		}
 
 		if (tmptime < time(NULL) - 3)
@@ -232,8 +226,6 @@ void *connect_socket(void *packe)
 			header->size = sizeof(p_head) + (sizeof(float) * 2);
 			float cpuusage_avg = (float)usagelist->cputotal / (float)usagelist->cpulen;
 			float memusage_avg = (float)usagelist->memtotal / (float)usagelist->memlen;
-			// printf("cputotal: %f cpulen: %d\n", usagelist->cputotal, usagelist->cpulen);
-			// printf("memtotal: %f memlen: %d\n", usagelist->memtotal, usagelist->memlen);
 			printf("cpuavg: %f  memavg: %f\n", cpuusage_avg, memusage_avg);
 			char *tmp = make_packet(header, sizeof(p_head), &cpuusage_avg, sizeof(float));
 			char *message = make_packet(tmp, sizeof(p_head) + sizeof(float), &memusage_avg, sizeof(float));
@@ -241,10 +233,8 @@ void *connect_socket(void *packe)
 			tmptime = time(NULL);
 			free_s(tmp);
 			free_s(message);
-			// break;
 		}
 	}
-	// flag = 0;
 	free_s(header);
 	close(my_sock);
 	writelog(logfd, DEBUG, "전송 완료");

@@ -50,32 +50,32 @@ packet *init(void)
 		fgets(buf, sizeof(buf), config);
 		tmp = strtok(buf, "=");
 		tmp = strtok(NULL, "=");
-		// CPU_CYCLE = atof(tmp) * 1000000;
-		CPU_CYCLE = atof(tmp) * 100000;
+		CPU_CYCLE = atof(tmp) * 1000000;
+		// CPU_CYCLE = atof(tmp) * 100000;
 
 		fgets(buf, sizeof(buf), config);
 		tmp = strtok(buf, "=");
 		tmp = strtok(NULL, "=");
-		// MEM_CYCLE = atof(tmp) * 1000000;
-		MEM_CYCLE = atof(tmp) * 100000;
+		MEM_CYCLE = atof(tmp) * 1000000;
+		// MEM_CYCLE = atof(tmp) * 100000;
 		
 		fgets(buf, sizeof(buf), config);
 		tmp = strtok(buf, "=");
 		tmp = strtok(NULL, "=");
-		// NET_CYCLE = atof(tmp) * 1000000;
-		NET_CYCLE = atof(tmp) * 100000;
+		NET_CYCLE = atof(tmp) * 1000000;
+		// NET_CYCLE = atof(tmp) * 100000;
 		
 		fgets(buf, sizeof(buf), config);
 		tmp = strtok(buf, "=");
 		tmp = strtok(NULL, "=");
-		// PROC_CYCLE = atof(tmp) * 1000000;
-		PROC_CYCLE = atof(tmp) * 100000;
+		PROC_CYCLE = atof(tmp) * 1000000;
+		// PROC_CYCLE = atof(tmp) * 100000;
 
 		fgets(buf, sizeof(buf), config);
 		tmp = strtok(buf, "=");
 		tmp = strtok(NULL, "=");
-		// DISK_CYCLE = atof(tmp) * 1000000;
-		DISK_CYCLE = atof(tmp) * 100000;
+		DISK_CYCLE = atof(tmp) * 1000000;
+		// DISK_CYCLE = atof(tmp) * 100000;
 	}
 	
 	return (queue);
@@ -83,6 +83,8 @@ packet *init(void)
 
 void quit(int sig)
 {
+	if (sig == SIGSEGV)	
+		printf("segfault");
 	fclose(logfd);
 	exit(0);
 }
@@ -140,7 +142,6 @@ int main()
 
 	free_s(queue);
 
-	write(1, "4", 1);
 	writelog(logfd, DEBUG, "exit");
 	fclose(logfd);
 	
