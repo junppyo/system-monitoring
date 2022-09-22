@@ -9,18 +9,15 @@ int connect_db(void)
 	bool reconnect = 1;
 	mysql_options(conn, MYSQL_OPT_RECONNECT, &reconnect);
 	if (!mysql_real_connect(conn, "127.0.0.1", "root", "root", "exem", 0, NULL, 0))
-//	if (!mysql_real_connect(conn, server, user, password, 0, NULL, 0))
 		return 1;
 	return 0;
 }
 
 void send_query(char *s)
 {
-	// MYSQL_RES *res;
-	// MYSQL_ROW row;
 	// write(1, s, ft_strlen(s));
 	// write(1, "\n", 1);
-	// mysql_query(conn, s);
+	mysql_query(conn, s);
 }
 
 void chk_data(cpuinfo *info)
@@ -40,8 +37,6 @@ void chk_data(cpuinfo *info)
 	}
 }
 
-
-// create new thread in saver, for delta, avg
 
 void *saver(void *queu)
 {
@@ -115,7 +110,6 @@ void *saver(void *queu)
 			{
 				sprintf(buf, "INSERT INTO diskinfo (id, name, type, total, used, available, mount) VALUES (%d, \'%s\', \'%s\', %lu, %lu, %lu, \'%s\')", dinfo->id, dinfo->name, dinfo->type, dinfo->total, dinfo->used, dinfo->available, dinfo->mounted);
 				send_query(buf);
-				// printf("%s\n",buf);
 				free_s(dinfo);
 			}
 			free_s(tmp);

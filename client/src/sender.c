@@ -118,11 +118,9 @@ void *connect_socket(void *packe)
 			header->size = sizeof(p_head) + sizeof(netinfo);
 			netinfo *tmp = net_pop(packet);
 			char *message = make_packet(header, sizeof(p_head), tmp, sizeof(netinfo));
-			// printf("send net\n");
 			snd(message, sizeof(p_head) + sizeof(netinfo));
 			free_s(message);
 			free_s(tmp);
-			// break;
 		}
 
 		if (packet->plistqueue->next)
@@ -133,8 +131,6 @@ void *connect_socket(void *packe)
 			char *tmp = NULL;
 			char *message = NULL;
 			int i = 0;
-			// message = make_packet(header, sizeof(p_head), list, sizeof(plist));
-			// size += sizeof(p_head) + sizeof(plist);
 			while ((pinfo = pop(list)) != 0)
 			{
 
@@ -164,7 +160,6 @@ void *connect_socket(void *packe)
 					tmp = make_packet(header, sizeof(p_head), list, sizeof(plist));
 					char *real = make_packet(tmp, sizeof(p_head)+sizeof(plist), message, size);
 					snd(real, header->size);
-					// snd(message, size);
 					free_s(message);
 					free_s(tmp);
 					free_s(real);
@@ -177,13 +172,11 @@ void *connect_socket(void *packe)
 			tmp = make_packet(header, sizeof(p_head), list, sizeof(plist));
 			char *real = make_packet(tmp, sizeof(p_head)+sizeof(plist), message, size);
 			snd(real, header->size);
-			// snd(message, size);
 			free_s(message);
 			free_s(list->HEAD);
 			free_s(list);
 			free_s(tmp);
 			free_s(real);
-			// break ;
 		}
 
 		if (packet->diskqueue->next)

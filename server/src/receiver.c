@@ -31,9 +31,7 @@ int rcv(int fd, void *message, int size)
 		}
 	}
 	if (ret != size)
-	{
 		return -1;
-	}
 	itoa(ret, s);
 	char *logmessage = ft_strjoin(s, "byte received");
 	writelog(logfd, TRACE, logmessage);
@@ -232,9 +230,7 @@ void *tcp_open(void *queu)
 				writelog(logfd, DEBUG, "ignored packet");
 				procinfo *pinfo;
 				while ((pinfo = pop(tmp)) != NULL)
-				{
 					free_s(pinfo);
-				}
 				free_s(tmp);
 			}
 		}

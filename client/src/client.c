@@ -32,10 +32,10 @@ packet *init(void)
 	{
 		writelog(logfd, ERROR, "Can't Read Config File");
 		clientid = 1;
-		CPU_CYCLE = 1;
-		MEM_CYCLE = 1;
-		NET_CYCLE = 1;
-		PROC_CYCLE = 1;
+		CPU_CYCLE = 1000000;
+		MEM_CYCLE = 1000000;
+		NET_CYCLE = 1000000;
+		PROC_CYCLE = 1000000;
 	}
 	else
 	{

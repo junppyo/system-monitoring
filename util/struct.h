@@ -49,7 +49,6 @@ typedef struct s_procinfo
 	float cputime;
 	int cmdline_len;
 	char *cmdline;
-	// char cmdline[4096];
 	struct s_procinfo *next;	
 } procinfo;
 

@@ -50,7 +50,6 @@ int getsize(plist *list)
 void cpu_append(packet *packet, cpuinfo *node)
 {
 	pthread_mutex_lock(&packet->cpu_mutex);
-//	printf("cpu append\n");
 	node->next = NULL;
 	int i =0;
 	if (!packet->cpuqueue->next)
@@ -352,7 +351,6 @@ float memusage_append(struct s_usagelist *queue, float usage)
 	}
 }
 
-// struct s_cpuusage *
 void cpuusage_pop(struct s_usagelist *queue)
 {
 	pthread_mutex_lock(&queue->cpuusage_mutex);
@@ -366,14 +364,9 @@ void cpuusage_pop(struct s_usagelist *queue)
 	queue->cpuTAIL->prev = queue->cpuTAIL->prev->prev;
 	free(ret);
 	pthread_mutex_unlock(&queue->cpuusage_mutex);
-	// free(ret);
-	// if (ret == queue->cpuHEAD)
-	// 	return NULL;
-	// else
-	// 	return ret;
+
 }
 
-// struct s_memusage *
 void memusage_pop(struct s_usagelist *queue)
 {
 	pthread_mutex_lock(&queue->memusage_mutex);
@@ -390,9 +383,4 @@ void memusage_pop(struct s_usagelist *queue)
 	queue->memTAIL->prev = queue->memTAIL->prev->prev;
 	free(ret);
 	pthread_mutex_unlock(&queue->memusage_mutex);
-	// free(ret);
-	// if (ret == queue->memHEAD)
-	// 	return NULL;
-	// else
-	// 	return ret;
 }
